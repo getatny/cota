@@ -1,0 +1,23 @@
+{
+  "name": "cota",
+  "version": "0.0.1",
+  "description": "A small comment system for static website.",
+  "main": "src/index.js",
+  "repository": "https://github.com/getatny/cota.git",
+  "author": "Matthew Wang <ga@getatny.com>",
+  "license": "MIT",
+  "dependencies": {
+    "koa": "^2.11.0",
+    "koa-better-router": "^2.1.1",
+    "koa-json": "^2.0.2",
+    "koa-logger": "^3.2.1",
+    "koa-static": "^5.0.0",
+    "sequelize": "^5.21.2",
+    "sqlite3": "^4.1.0",
+    "uglify-es": "^3.3.9"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "export": "uglifyjs src/export/cota.js -c -m -o src/dist/cota.min.js"
+  }
+}
