@@ -1,0 +1,6 @@
+{
+  "development": {
+    "storage": "db/cota.sqlite",
+    "dialect": "sqlite"
+  }
+}
