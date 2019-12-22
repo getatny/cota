@@ -14,11 +14,14 @@
     "koa-static": "^5.0.0",
     "sequelize": "^5.21.2",
     "sequelize-cli": "^5.5.1",
-    "sqlite3": "^4.1.0",
+    "sqlite3": "^4.1.0"
+  },
+  "devDependencies": {
+    "less": "^3.10.3",
     "uglify-es": "^3.3.9"
   },
   "scripts": {
     "start": "node src/index.js",
-    "export": "uglifyjs src/export/cota.js -c -m -o src/dist/cota.min.js"
+    "export": "uglifyjs src/static/cota.js -c -m -o dist/cota.min.js && lessc src/static/cota.less dist/cota.min.css"
   }
 }

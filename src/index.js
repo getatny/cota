@@ -9,7 +9,7 @@ const app = new Koa()
 
 app.use(logger())
 app.use(json({ pretty: false, param: 'pretty' }))
-app.use(serve('src/dist'))
+app.use(serve('dist'))
 app.use(router.middleware())
 
 app.listen(config.port, () => {
