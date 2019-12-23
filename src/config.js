@@ -1,3 +1,4 @@
 module.exports = {
-    port: 4444
+    port: 4444,
+    whiteList: []
 }

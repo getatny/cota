@@ -4,10 +4,18 @@ const json = require('koa-json')
 const logger = require('koa-logger')
 const router = require('./router')
 const config = require('./config')
+const cors = require('@koa/cors')
 
 const app = new Koa()
 
 app.use(logger())
+app.use(cors({
+    origin: function(ctx) {
+        let isWhiteList = null
+        config.whiteList.forEach(item => ctx.request.header.origin.indexOf(item) > -1 ? isWhiteList = ctx.request.header.origin : null)
+        return isWhiteList
+    }
+}))
 app.use(json({ pretty: false, param: 'pretty' }))
 app.use(serve('dist'))
 app.use(router.middleware())

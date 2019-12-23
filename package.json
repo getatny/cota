@@ -7,6 +7,7 @@
   "author": "Matthew Wang <ga@getatny.com>",
   "license": "MIT",
   "dependencies": {
+    "@koa/cors": "2",
     "koa": "^2.11.0",
     "koa-better-router": "^2.1.1",
     "koa-json": "^2.0.2",

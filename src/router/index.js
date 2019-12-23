@@ -8,4 +8,9 @@ router.get('/rest/comments/:id', (ctx, next) => {
     return next()
 })
 
+router.get('/rest/test', (ctx, next) => {
+    ctx.body = ctx
+    return next()
+})
+
 module.exports = router

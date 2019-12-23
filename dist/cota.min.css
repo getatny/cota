@@ -1,6 +1,7 @@
 #cota .comment-box {
   width: 100%;
   box-shadow: 0 0 10px #eee;
+  position: relative;
 }
 #cota .comment-box .comment-input {
   width: 100%;
