@@ -1,5 +1,5 @@
 (function(d) {
-    const gravatarMirror = 'https://dn-qiniu-avatar.qbox.me/avatar/'
+    const gravatarMirror = 'https://dn-qiniu-avatar.qbox.me/avatar'
 
     importCss()
 
@@ -11,6 +11,11 @@
     commentBox.classList.add('comment-box')
     commentBox.innerHTML = '<textarea class="comment-input"></textarea><div id="comment-btns"><div class="clear"></div></div>'
     cota.prepend(commentBox)
+    // emoji button el
+    const emojiButton = d.createElement('a')
+    emojiButton.classList.add('emoji')
+    emojiButton.innerText = 'Emoji'
+    emojiButton.addEventListener('click', showEmojiSelectBox)
     // submit button el
     const submitButton = d.createElement('a')
     submitButton.classList.add('submit')
@@ -23,14 +28,29 @@
     cancelReplyButton.addEventListener('click', cancelReply)
     cancelReplyButton.style.display = 'none' // for default situation, this button will be hide
     // commnet list el
-    const commentListEl = d.createElement('div')
+    const commentListEl = d.createElement('ul')
     commentListEl.setAttribute('id', 'comment-list')
+    // emoji box
+    const emojiSelectBox = d.createElement('div')
+    emojiSelectBox.setAttribute('id', 'emoji-select-box')
+    emojiSelectBox.innerHTML = '<div class="emoji-select-arrow"></div>'
+    const emojiSelectBoxContent = d.createElement('div')
+    emojiSelectBoxContent.classList.add('emoji-select-content')
+    emojiSelectBox.prepend(emojiSelectBoxContent)
+    d.documentElement.addEventListener('click', hideEmojiSelectBox)
     // inject element
     d.getElementById('comment-btns').prepend(submitButton)
     d.getElementById('comment-btns').prepend(cancelReplyButton)
+    d.getElementById('comment-btns').prepend(emojiButton)
     cota.append(commentListEl)
+    cota.append(emojiSelectBox)
 
     renderCommentList()
+
+    let emojiList = getEmojiFromServer()
+    emojiList.forEach(item => {
+        emojiSelectBoxContent.append(createEmojiEl(item))
+    })
 
     // import necessary css style
     function importCss() {
@@ -68,37 +88,50 @@
         const commentList = getCommentFromServer()
         // render main comment
         commentList.mainComments.forEach(item => {
-            const commentListItem = addCommentItem(item)
+            const commentListItem = createCommentItem(item)
             commentListEl.append(commentListItem)
         })
         commentList.childComments.forEach(item => {
-            const commentListItem = addCommentItem(item, true)
-            d.querySelector(`#comment-list-item-${item.parentId} .child-comment-list`).append(commentListItem)
+            const commentListItem = createCommentItem(item, true)
+            d.querySelector(`#comment-list-item-${item.parentId} .child`).append(commentListItem)
         })
     }
 
-    function addCommentItem(item, child = false) {
-        const commentListItem = d.createElement('div')
+    function createCommentItem(item, child = false) {
+        const commentListItem = d.createElement('li')
+        commentListItem.classList.add('comment-list-item')
         commentListItem.setAttribute('id', 'comment-list-item-' + item.id)
-        commentListItem.innerHTML = `<div class="avatar"><img src="${gravatarMirror}/${hex_md5(item.email)}" alt="${item.nickname}" /></div>`
+        if (!child) {
+            commentListItem.innerHTML = `<div class="avatar"><img src="${gravatarMirror}/${md5(item.email)}" alt="${item.nickname}" /></div><ul class="child"></ul>`
+        } else {
+            commentListItem.innerHTML = `<div class="avatar"><img src="${gravatarMirror}/${md5(item.email)}" alt="${item.nickname}" /></div>`
+        }
         // comment detail el
         const commentDetail = d.createElement('div')
         commentDetail.classList.add('comment-detail')
+        commentDetail.addEventListener('mouseenter', function(e) {
+            e.stopPropagation()
+            e.target.children[0].children[0].style.opacity = '1'
+        })
+        commentDetail.addEventListener('mouseleave', function(e) {
+            e.target.children[0].children[0].style.opacity = '0'
+        })
         // comment info el
         const commentInfo = d.createElement('div')
         commentInfo.classList.add('comment-info')
+        if (item.website !== '') {
+            commentInfo.innerHTML = `<a class="nickname" href="${item.website}">${item.nickname}</a><div class="clear"></div>`
+        } else {
+            commentInfo.innerHTML = `<span class="nickname">${item.nickname}</span><div class="clear"></div>`
+        }
         const reply = d.createElement('a')
         reply.classList.add('reply-comment')
         reply.innerText = 'Reply'
         reply.addEventListener('click', replyCommnet)
-        if (child) {
-            commentDetail.innerHTML = `<div class="comment-content">${item.comment}</div><div class="comment-box-${item.id}"></div>`
-        } else {
-            commentDetail.innerHTML = `<div class="comment-content">${item.comment}</div><div class="comment-box-${item.id}"></div><div class="child-comment-list"></div>`
-        }
-        commentInfo.append(reply)
+        commentDetail.innerHTML = `<div class="comment-content">${item.comment}</div><div class="comment-box-${item.id}"></div>`
+        commentInfo.prepend(reply)
         commentDetail.prepend(commentInfo)
-        commentListItem.append(commentDetail)
+        commentListItem.prepend(commentDetail)
         return commentListItem
     }
 
@@ -117,7 +150,7 @@
     function getCommentAndSubmit(e) {
         const value = e.target.parentElement.previousElementSibling.value
         setTimeout(() => {
-            const commentListItem = addCommentItem({
+            const commentListItem = createCommentItem({
                 id: 2,
                 postId: 1,
                 parentId: 0,
@@ -129,10 +162,61 @@
             if (commentTo === null) {
                 commentListEl.prepend(commentListItem)
             } else {
-                commentTo.append(commentListItem)
+                if (commentTo.parentElement.className === 'child') {
+                    commentTo.parentElement.append(commentListItem)
+                } else {
+                    commentTo.children[2].append(commentListItem)
+                }
+            }
+            
+            if (e.target.previousElementSibling.style.display === 'block') {
+                e.target.previousElementSibling.click()
             }
             e.target.parentElement.previousElementSibling.value = ''
         }, 1000)
+    }
+
+    function showEmojiSelectBox(e) {
+        const position = getElementPagePosition(e.target)
+        const left = (position.x + ((e.target.offsetWidth) / 2) - 42)
+
+        emojiSelectBox.style.cssText = `top: ${position.y - emojiSelectBox.offsetHeight - 9}px; left: ${left}px`
+        emojiSelectBox.className = 'show-selection'
+    }
+
+    function hideEmojiSelectBox(e) {
+        if (e.target.closest('#emoji-select-box') === null && e.target.className !== 'emoji') {
+            emojiSelectBox.className = 'hide-selection'
+        }
+    }
+
+    function createEmojiEl(emoji) {
+        const tEmoji = d.createElement('a')
+        tEmoji.innerText = emoji
+        tEmoji.addEventListener('click', insertEmojiToTextarea)
+        return tEmoji
+    }
+
+    function insertEmojiToTextarea(e) {
+        const content = e.target.innerText
+        const inputBox = commentBox.children[0]
+        inputBox.value = inputBox.value + content
+    }
+
+    function getElementPagePosition(element){
+        let actualLeft = element.offsetLeft;
+        let current = element.offsetParent;
+        while (current !== null) {
+            actualLeft += current.offsetLeft;
+            current = current.offsetParent;
+        }
+        let actualTop = element.offsetTop;
+        current = element.offsetParent;
+        while (current !== null) {
+            actualTop += (current.offsetTop+current.clientTop);
+            current = current.offsetParent;
+        }
+        return { x: actualLeft, y: actualTop }
     }
 
     // fetch comment list from server
@@ -144,9 +228,18 @@
                     postId: 1,
                     parentId: 0,
                     email: 'wangmaozhu@foxmail.com',
-                    website: 'matthew-wang.com',
+                    website: '',
                     nickname: 'Matthew',
                     comment: 'test',
+                },
+                {
+                    id: 4,
+                    postId: 1,
+                    parentId: 0,
+                    email: 'wangmaozhu@foxmail.com',
+                    website: 'matthew-wang.com',
+                    nickname: 'Getatny',
+                    comment: '我只是想要试试评论的效果而已！',
                 }
             ],
             childComments: [
@@ -157,10 +250,14 @@
                     email: 'wangmaozhu@foxmail.com',
                     website: 'matthew-wang.com',
                     nickname: 'Matthew',
-                    comment: 'test child comment',
+                    comment: 'test child comment!',
                 }
             ]
         }
+    }
+
+    function getEmojiFromServer() {
+        return ['😀', '😃', '😄']
     }
 
     function getServerPathByJSLink() {
@@ -170,241 +267,5 @@
     }
 
     // ========================================================================================================== md5
-    /*
-    * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
-    * Digest Algorithm, as defined in RFC 1321.
-    * Version 2.1 Copyright (C) Paul Johnston 1999 - 2002.
-    * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
-    * Distributed under the BSD License
-    * See http://pajhome.org.uk/crypt/md5 for more info.
-    */
-
-    /*
-    * Configurable variables. You may need to tweak these to be compatible with
-    * the server-side, but the defaults work in most cases.
-    */
-    var hexcase = 0;  /* hex output format. 0 - lowercase; 1 - uppercase        */
-    var b64pad  = ""; /* base-64 pad character. "=" for strict RFC compliance   */
-    var chrsz   = 8;  /* bits per input character. 8 - ASCII; 16 - Unicode      */
-
-    /*
-    * These are the functions you'll usually want to call
-    * They take string arguments and return either hex or base-64 encoded strings
-    */
-    function hex_md5(s){ return binl2hex(core_md5(str2binl(s), s.length * chrsz));}
-    function b64_md5(s){ return binl2b64(core_md5(str2binl(s), s.length * chrsz));}
-    function str_md5(s){ return binl2str(core_md5(str2binl(s), s.length * chrsz));}
-    function hex_hmac_md5(key, data) { return binl2hex(core_hmac_md5(key, data)); }
-    function b64_hmac_md5(key, data) { return binl2b64(core_hmac_md5(key, data)); }
-    function str_hmac_md5(key, data) { return binl2str(core_hmac_md5(key, data)); }
-
-    /*
-    * Perform a simple self-test to see if the VM is working
-    */
-    function md5_vm_test() {
-        return hex_md5("abc") == "900150983cd24fb0d6963f7d28e17f72";
-    }
-
-    /*
-    * Calculate the MD5 of an array of little-endian words, and a bit length
-    */
-    function core_md5(x, len) {
-        /* append padding */
-        x[len >> 5] |= 0x80 << ((len) % 32);
-        x[(((len + 64) >>> 9) << 4) + 14] = len;
-
-        var a =  1732584193;
-        var b = -271733879;
-        var c = -1732584194;
-        var d =  271733878;
-
-        for(var i = 0; i < x.length; i += 16) {
-            var olda = a;
-            var oldb = b;
-            var oldc = c;
-            var oldd = d;
-
-            a = md5_ff(a, b, c, d, x[i+ 0], 7 , -680876936);
-            d = md5_ff(d, a, b, c, x[i+ 1], 12, -389564586);
-            c = md5_ff(c, d, a, b, x[i+ 2], 17,  606105819);
-            b = md5_ff(b, c, d, a, x[i+ 3], 22, -1044525330);
-            a = md5_ff(a, b, c, d, x[i+ 4], 7 , -176418897);
-            d = md5_ff(d, a, b, c, x[i+ 5], 12,  1200080426);
-            c = md5_ff(c, d, a, b, x[i+ 6], 17, -1473231341);
-            b = md5_ff(b, c, d, a, x[i+ 7], 22, -45705983);
-            a = md5_ff(a, b, c, d, x[i+ 8], 7 ,  1770035416);
-            d = md5_ff(d, a, b, c, x[i+ 9], 12, -1958414417);
-            c = md5_ff(c, d, a, b, x[i+10], 17, -42063);
-            b = md5_ff(b, c, d, a, x[i+11], 22, -1990404162);
-            a = md5_ff(a, b, c, d, x[i+12], 7 ,  1804603682);
-            d = md5_ff(d, a, b, c, x[i+13], 12, -40341101);
-            c = md5_ff(c, d, a, b, x[i+14], 17, -1502002290);
-            b = md5_ff(b, c, d, a, x[i+15], 22,  1236535329);
-
-            a = md5_gg(a, b, c, d, x[i+ 1], 5 , -165796510);
-            d = md5_gg(d, a, b, c, x[i+ 6], 9 , -1069501632);
-            c = md5_gg(c, d, a, b, x[i+11], 14,  643717713);
-            b = md5_gg(b, c, d, a, x[i+ 0], 20, -373897302);
-            a = md5_gg(a, b, c, d, x[i+ 5], 5 , -701558691);
-            d = md5_gg(d, a, b, c, x[i+10], 9 ,  38016083);
-            c = md5_gg(c, d, a, b, x[i+15], 14, -660478335);
-            b = md5_gg(b, c, d, a, x[i+ 4], 20, -405537848);
-            a = md5_gg(a, b, c, d, x[i+ 9], 5 ,  568446438);
-            d = md5_gg(d, a, b, c, x[i+14], 9 , -1019803690);
-            c = md5_gg(c, d, a, b, x[i+ 3], 14, -187363961);
-            b = md5_gg(b, c, d, a, x[i+ 8], 20,  1163531501);
-            a = md5_gg(a, b, c, d, x[i+13], 5 , -1444681467);
-            d = md5_gg(d, a, b, c, x[i+ 2], 9 , -51403784);
-            c = md5_gg(c, d, a, b, x[i+ 7], 14,  1735328473);
-            b = md5_gg(b, c, d, a, x[i+12], 20, -1926607734);
-
-            a = md5_hh(a, b, c, d, x[i+ 5], 4 , -378558);
-            d = md5_hh(d, a, b, c, x[i+ 8], 11, -2022574463);
-            c = md5_hh(c, d, a, b, x[i+11], 16,  1839030562);
-            b = md5_hh(b, c, d, a, x[i+14], 23, -35309556);
-            a = md5_hh(a, b, c, d, x[i+ 1], 4 , -1530992060);
-            d = md5_hh(d, a, b, c, x[i+ 4], 11,  1272893353);
-            c = md5_hh(c, d, a, b, x[i+ 7], 16, -155497632);
-            b = md5_hh(b, c, d, a, x[i+10], 23, -1094730640);
-            a = md5_hh(a, b, c, d, x[i+13], 4 ,  681279174);
-            d = md5_hh(d, a, b, c, x[i+ 0], 11, -358537222);
-            c = md5_hh(c, d, a, b, x[i+ 3], 16, -722521979);
-            b = md5_hh(b, c, d, a, x[i+ 6], 23,  76029189);
-            a = md5_hh(a, b, c, d, x[i+ 9], 4 , -640364487);
-            d = md5_hh(d, a, b, c, x[i+12], 11, -421815835);
-            c = md5_hh(c, d, a, b, x[i+15], 16,  530742520);
-            b = md5_hh(b, c, d, a, x[i+ 2], 23, -995338651);
-
-            a = md5_ii(a, b, c, d, x[i+ 0], 6 , -198630844);
-            d = md5_ii(d, a, b, c, x[i+ 7], 10,  1126891415);
-            c = md5_ii(c, d, a, b, x[i+14], 15, -1416354905);
-            b = md5_ii(b, c, d, a, x[i+ 5], 21, -57434055);
-            a = md5_ii(a, b, c, d, x[i+12], 6 ,  1700485571);
-            d = md5_ii(d, a, b, c, x[i+ 3], 10, -1894986606);
-            c = md5_ii(c, d, a, b, x[i+10], 15, -1051523);
-            b = md5_ii(b, c, d, a, x[i+ 1], 21, -2054922799);
-            a = md5_ii(a, b, c, d, x[i+ 8], 6 ,  1873313359);
-            d = md5_ii(d, a, b, c, x[i+15], 10, -30611744);
-            c = md5_ii(c, d, a, b, x[i+ 6], 15, -1560198380);
-            b = md5_ii(b, c, d, a, x[i+13], 21,  1309151649);
-            a = md5_ii(a, b, c, d, x[i+ 4], 6 , -145523070);
-            d = md5_ii(d, a, b, c, x[i+11], 10, -1120210379);
-            c = md5_ii(c, d, a, b, x[i+ 2], 15,  718787259);
-            b = md5_ii(b, c, d, a, x[i+ 9], 21, -343485551);
-
-            a = safe_add(a, olda);
-            b = safe_add(b, oldb);
-            c = safe_add(c, oldc);
-            d = safe_add(d, oldd);
-        }
-        return Array(a, b, c, d);
-    }
-
-    /*
-    * These functions implement the four basic operations the algorithm uses.
-    */
-    function md5_cmn(q, a, b, x, s, t) {
-        return safe_add(bit_rol(safe_add(safe_add(a, q), safe_add(x, t)), s),b);
-    }
-    function md5_ff(a, b, c, d, x, s, t) {
-        return md5_cmn((b & c) | ((~b) & d), a, b, x, s, t);
-    }
-    function md5_gg(a, b, c, d, x, s, t) {
-        return md5_cmn((b & d) | (c & (~d)), a, b, x, s, t);
-    }
-    function md5_hh(a, b, c, d, x, s, t) {
-        return md5_cmn(b ^ c ^ d, a, b, x, s, t);
-    }
-    function md5_ii(a, b, c, d, x, s, t) {
-        return md5_cmn(c ^ (b | (~d)), a, b, x, s, t);
-    }
-
-    /*
-    * Calculate the HMAC-MD5, of a key and some data
-    */
-    function core_hmac_md5(key, data) {
-        var bkey = str2binl(key);
-        if(bkey.length > 16) bkey = core_md5(bkey, key.length * chrsz);
-
-        var ipad = Array(16), opad = Array(16);
-        for(var i = 0; i < 16; i++) {
-            ipad[i] = bkey[i] ^ 0x36363636;
-            opad[i] = bkey[i] ^ 0x5C5C5C5C;
-        }
-
-        var hash = core_md5(ipad.concat(str2binl(data)), 512 + data.length * chrsz);
-        return core_md5(opad.concat(hash), 512 + 128);
-    }
-
-    /*
-    * Add integers, wrapping at 2^32. This uses 16-bit operations internally
-    * to work around bugs in some JS interpreters.
-    */
-    function safe_add(x, y) {
-        var lsw = (x & 0xFFFF) + (y & 0xFFFF);
-        var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
-        return (msw << 16) | (lsw & 0xFFFF);
-    }
-
-    /*
-    * Bitwise rotate a 32-bit number to the left.
-    */
-    function bit_rol(num, cnt) {
-        return (num << cnt) | (num >>> (32 - cnt));
-    }
-
-    /*
-    * Convert a string to an array of little-endian words
-    * If chrsz is ASCII, characters >255 have their hi-byte silently ignored.
-    */
-    function str2binl(str) {
-        var bin = Array();
-        var mask = (1 << chrsz) - 1;
-        for(var i = 0; i < str.length * chrsz; i += chrsz)
-            bin[i>>5] |= (str.charCodeAt(i / chrsz) & mask) << (i%32);
-        return bin;
-    }
-
-    /*
-    * Convert an array of little-endian words to a string
-    */
-    function binl2str(bin) {
-        var str = "";
-        var mask = (1 << chrsz) - 1;
-        for(var i = 0; i < bin.length * 32; i += chrsz)
-            str += String.fromCharCode((bin[i>>5] >>> (i % 32)) & mask);
-        return str;
-    }
-
-    /*
-    * Convert an array of little-endian words to a hex string.
-    */
-    function binl2hex(binarray) {
-        var hex_tab = hexcase ? "0123456789ABCDEF" : "0123456789abcdef";
-        var str = "";
-        for(var i = 0; i < binarray.length * 4; i++) {
-            str += hex_tab.charAt((binarray[i>>2] >> ((i%4)*8+4)) & 0xF) +
-                hex_tab.charAt((binarray[i>>2] >> ((i%4)*8  )) & 0xF);
-        }
-        return str;
-    }
-
-    /*
-    * Convert an array of little-endian words to a base-64 string
-    */
-    function binl2b64(binarray) {
-        var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        var str = "";
-        for(var i = 0; i < binarray.length * 4; i += 3) {
-            var triplet = (((binarray[i   >> 2] >> 8 * ( i   %4)) & 0xFF) << 16)
-                        | (((binarray[i+1 >> 2] >> 8 * ((i+1)%4)) & 0xFF) << 8 )
-                        |  ((binarray[i+2 >> 2] >> 8 * ((i+2)%4)) & 0xFF);
-            for(var j = 0; j < 4; j++)
-            {
-            if(i * 8 + j * 6 > binarray.length * 32) str += b64pad;
-            else str += tab.charAt((triplet >> 6*(3-j)) & 0x3F);
-            }
-        }
-        return str;
-    }
+    function md5(d){result = M(V(Y(X(d),8*d.length)));return result.toLowerCase()};function M(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function X(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function V(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function Y(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
 })(document)
