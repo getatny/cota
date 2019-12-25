@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
         url: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        key: {
+            type: DataTypes.STRING,
+            allowNull: false
         }
     }, {});
     post.associate = function(models) {

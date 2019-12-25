@@ -5,10 +5,12 @@ const logger = require('koa-logger')
 const router = require('./router')
 const config = require('./config')
 const cors = require('@koa/cors')
+const bodyParser = require('koa-bodyparser')
 
 const app = new Koa()
 
 app.use(logger())
+app.use(bodyParser())
 app.use(cors({
     origin: function(ctx) {
         let isWhiteList = null

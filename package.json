@@ -10,6 +10,7 @@
     "@koa/cors": "2",
     "koa": "^2.11.0",
     "koa-better-router": "^2.1.1",
+    "koa-bodyparser": "^4.2.1",
     "koa-json": "^2.0.2",
     "koa-logger": "^3.2.1",
     "koa-static": "^5.0.0",
@@ -23,6 +24,7 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "export": "uglifyjs src/static/cota.js -c -m -o dist/cota.min.js && lessc src/static/cota.less dist/cota.min.css"
+    "export": "uglifyjs src/static/cota.js -c -m -o dist/cota.min.js && lessc src/static/cota.less dist/cota.min.css",
+    "migration": "sequelize-cli db:migrate"
   }
 }

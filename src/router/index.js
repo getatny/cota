@@ -1,16 +1,9 @@
-const router = require('koa-better-router')().loadMethods()
-const dbController = require('../model')
+const Router = require('koa-better-router')
+const router = Router().loadMethods()
+const commentController = require('../controller/commnet')
 
-router.get('/rest/comments/:id', (ctx, next) => {
-    dbController.getComments().then(result => {
-        ctx.body = result
-    })
-    return next()
-})
+router.post('/comment/create', commentController.createComment)
+router.del('/comments/delete', commentController.deleteComments)
+router.get('/comments/:key', commentController.getComments)
 
-router.get('/rest/test', (ctx, next) => {
-    ctx.body = ctx
-    return next()
-})
-
-module.exports = router
+module.exports = Router({ prefix: '/rest' }).extend(router)

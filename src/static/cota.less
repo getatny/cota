@@ -4,6 +4,8 @@
         box-shadow: 0 5px 20px -5px #bbb;
         position: relative;
         margin-bottom: 30px;
+        border-radius: 4px;
+        overflow: hidden;
 
         .comment-input {
             width: 100%;
@@ -55,6 +57,7 @@
             background-clip: padding-box;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             width: 190px;
+            border-radius: 4px;
 
             a {
                 cursor: pointer;
@@ -84,11 +87,20 @@
         }
     }
 
+    & > ul {
+        padding-left: 0px;
+    }
+
     #comment-list {
         list-style: none;
 
+        & > li > ul, & > li > ul > li > ul {
+            padding-left: 40px;
+        }
+
         li, ul {
             list-style: none;
+            padding-left: 0px;
         }
 
         .comment-list-item {
@@ -102,6 +114,7 @@
                 position: absolute;
                 top: 0;
                 left: 0;
+                box-shadow: 0 5px 20px -5px #bbb;
 
                 img {
                     width: 50px;
@@ -113,7 +126,6 @@
                 width: calc(100% - 70px);
                 margin-left: 70px;
                 color: #313b3f;
-                margin-bottom: 30px;
 
                 .comment-info {
                     margin-bottom: 5px;
@@ -136,7 +148,24 @@
                 }
 
                 .comment-content {
-                    margin-bottom: 30px;
+                    padding-bottom: 30px;
+                }
+            }
+
+            .child {
+                .avatar {
+                    width: 40px;
+                    height: 40px;
+
+                    img {
+                        width: 40px;
+                        height: 40px;
+                    }
+                }
+
+                .comment-detail {
+                    width: calc(100% - 60px);
+                    margin-left: 60px;
                 }
             }
         }

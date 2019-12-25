@@ -1,6 +1,30 @@
 (function(d) {
     const gravatarMirror = 'https://dn-qiniu-avatar.qbox.me/avatar'
 
+    const http = {
+        get: (url) => {
+            return fetch(url)
+        },
+        post: (url, data) => {
+            return fetch(url, {
+                method: 'post',
+                headers: {
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+        },
+        delete: (url, data) => {
+            return fetch(url, {
+                method: 'delete',
+                headers: {
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+        }
+    }
+
     importCss()
 
     const cota = d.getElementById('cota')
@@ -31,6 +55,7 @@
     const commentListEl = d.createElement('ul')
     commentListEl.setAttribute('id', 'comment-list')
     // emoji box
+    let emojiSelectBoxStatuts = false
     const emojiSelectBox = d.createElement('div')
     emojiSelectBox.setAttribute('id', 'emoji-select-box')
     emojiSelectBox.innerHTML = '<div class="emoji-select-arrow"></div>'
@@ -85,15 +110,18 @@
 
     // render comment lsit
     function renderCommentList() {
-        const commentList = getCommentFromServer()
-        // render main comment
-        commentList.mainComments.forEach(item => {
-            const commentListItem = createCommentItem(item)
-            commentListEl.append(commentListItem)
-        })
-        commentList.childComments.forEach(item => {
-            const commentListItem = createCommentItem(item, true)
-            d.querySelector(`#comment-list-item-${item.parentId} .child`).append(commentListItem)
+        getCommentFromServer().then(res => {
+            const commentList = res
+
+            // render main comment
+            commentList.mainComments.forEach(item => {
+                const commentListItem = createCommentItem(item)
+                commentListEl.append(commentListItem)
+            })
+            commentList.childComments.forEach(item => {
+                const commentListItem = createCommentItem(item, true)
+                d.querySelector(`#comment-list-item-${item.parentId} .child`).append(commentListItem)
+            })
         })
     }
 
@@ -101,11 +129,8 @@
         const commentListItem = d.createElement('li')
         commentListItem.classList.add('comment-list-item')
         commentListItem.setAttribute('id', 'comment-list-item-' + item.id)
-        if (!child) {
-            commentListItem.innerHTML = `<div class="avatar"><img src="${gravatarMirror}/${md5(item.email)}" alt="${item.nickname}" /></div><ul class="child"></ul>`
-        } else {
-            commentListItem.innerHTML = `<div class="avatar"><img src="${gravatarMirror}/${md5(item.email)}" alt="${item.nickname}" /></div>`
-        }
+        commentListItem.setAttribute('data-id', item.id)
+        commentListItem.innerHTML = `<div class="avatar"><img src="${gravatarMirror}/${md5(item.email)}" alt="${item.nickname}" /></div><ul class="child"></ul>`
         // comment detail el
         const commentDetail = d.createElement('div')
         commentDetail.classList.add('comment-detail')
@@ -149,31 +174,39 @@
     // submit comment when user click submit button
     function getCommentAndSubmit(e) {
         const value = e.target.parentElement.previousElementSibling.value
-        setTimeout(() => {
+        const server = getServerPathByJSLink()
+        http.post(server + '/rest/comment/create', {
+            key: md5(d.location.pathname),
+            commentContent: value,
+            email: 'wangmaozhu@foxmail.com',
+            nickname: 'Matthew',
+            title: d.title,
+            url: d.location.href,
+            parentId: commentTo ? parseInt(commentTo.dataset.id) : 0
+        }).then(res => res.json()).then(res => {
             const commentListItem = createCommentItem({
-                id: 2,
-                postId: 1,
-                parentId: 0,
-                email: 'wangmaozhu@foxmail.com',
-                website: 'matthew-wang.com',
-                nickname: 'Matthew',
-                comment: value
+                id: res.data.id,
+                postId: res.data.postId,
+                parentId: res.data.parentId,
+                email: res.data.email,
+                website: res.data.website ? res.data.website : '',
+                nickname: res.data.nickname,
+                comment: res.data.comment
             })
-            if (commentTo === null) {
-                commentListEl.prepend(commentListItem)
-            } else {
-                if (commentTo.parentElement.className === 'child') {
-                    commentTo.parentElement.append(commentListItem)
+
+            if (res.success) {
+                if (commentTo === null) {
+                    commentListEl.prepend(commentListItem)
                 } else {
                     commentTo.children[2].append(commentListItem)
                 }
+                
+                if (e.target.previousElementSibling.style.display === 'block') {
+                    e.target.previousElementSibling.click()
+                }
+                e.target.parentElement.previousElementSibling.value = ''
             }
-            
-            if (e.target.previousElementSibling.style.display === 'block') {
-                e.target.previousElementSibling.click()
-            }
-            e.target.parentElement.previousElementSibling.value = ''
-        }, 1000)
+        })
     }
 
     function showEmojiSelectBox(e) {
@@ -182,10 +215,11 @@
 
         emojiSelectBox.style.cssText = `top: ${position.y - emojiSelectBox.offsetHeight - 9}px; left: ${left}px`
         emojiSelectBox.className = 'show-selection'
+        emojiSelectBoxStatuts = true
     }
 
     function hideEmojiSelectBox(e) {
-        if (e.target.closest('#emoji-select-box') === null && e.target.className !== 'emoji') {
+        if (e.target.closest('#emoji-select-box') === null && e.target.className !== 'emoji' && emojiSelectBoxStatuts === true) {
             emojiSelectBox.className = 'hide-selection'
         }
     }
@@ -221,39 +255,12 @@
 
     // fetch comment list from server
     function getCommentFromServer() {
-        return {
-            mainComments: [
-                {
-                    id: 1,
-                    postId: 1,
-                    parentId: 0,
-                    email: 'wangmaozhu@foxmail.com',
-                    website: '',
-                    nickname: 'Matthew',
-                    comment: 'test',
-                },
-                {
-                    id: 4,
-                    postId: 1,
-                    parentId: 0,
-                    email: 'wangmaozhu@foxmail.com',
-                    website: 'matthew-wang.com',
-                    nickname: 'Getatny',
-                    comment: '我只是想要试试评论的效果而已！',
-                }
-            ],
-            childComments: [
-                {
-                    id: 3,
-                    postId: 1,
-                    parentId: 1,
-                    email: 'wangmaozhu@foxmail.com',
-                    website: 'matthew-wang.com',
-                    nickname: 'Matthew',
-                    comment: 'test child comment!',
-                }
-            ]
-        }
+        const server = getServerPathByJSLink()
+        return http.get(`${server}/rest/comments/${md5(d.location.pathname)}`).then(res => res.json()).then(res => {
+            if (res.success) {
+                return res.data
+            }
+        })
     }
 
     function getEmojiFromServer() {

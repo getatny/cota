@@ -3,6 +3,8 @@
   box-shadow: 0 5px 20px -5px #bbb;
   position: relative;
   margin-bottom: 30px;
+  border-radius: 4px;
+  overflow: hidden;
 }
 #cota .comment-box .comment-input {
   width: 100%;
@@ -46,6 +48,7 @@
   background-clip: padding-box;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   width: 190px;
+  border-radius: 4px;
 }
 #cota #emoji-select-box .emoji-select-content a {
   cursor: pointer;
@@ -70,12 +73,20 @@
   left: 40px;
   transform: rotate(45deg);
 }
+#cota > ul {
+  padding-left: 0px;
+}
 #cota #comment-list {
   list-style: none;
+}
+#cota #comment-list > li > ul,
+#cota #comment-list > li > ul > li > ul {
+  padding-left: 40px;
 }
 #cota #comment-list li,
 #cota #comment-list ul {
   list-style: none;
+  padding-left: 0px;
 }
 #cota #comment-list .comment-list-item {
   position: relative;
@@ -88,6 +99,7 @@
   position: absolute;
   top: 0;
   left: 0;
+  box-shadow: 0 5px 20px -5px #bbb;
 }
 #cota #comment-list .comment-list-item .avatar img {
   width: 50px;
@@ -97,7 +109,6 @@
   width: calc(100% - 70px);
   margin-left: 70px;
   color: #313b3f;
-  margin-bottom: 30px;
 }
 #cota #comment-list .comment-list-item .comment-detail .comment-info {
   margin-bottom: 5px;
@@ -117,7 +128,19 @@
   background-color: #f9fafb;
 }
 #cota #comment-list .comment-list-item .comment-detail .comment-content {
-  margin-bottom: 30px;
+  padding-bottom: 30px;
+}
+#cota #comment-list .comment-list-item .child .avatar {
+  width: 40px;
+  height: 40px;
+}
+#cota #comment-list .comment-list-item .child .avatar img {
+  width: 40px;
+  height: 40px;
+}
+#cota #comment-list .comment-list-item .child .comment-detail {
+  width: calc(100% - 60px);
+  margin-left: 60px;
 }
 #cota .clear {
   clear: both;
