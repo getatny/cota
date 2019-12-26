@@ -11,6 +11,9 @@ module.exports = {
       postId: {
         type: Sequelize.INTEGER
       },
+      rootId: {
+          type: Sequelize.INTEGER
+      },
       parentId: {
         type: Sequelize.INTEGER
       },

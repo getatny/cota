@@ -1,6 +1,11 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
     const comment = sequelize.define('comment', {
+        rootId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
         parentId: {
             type: DataTypes.INTEGER,
             allowNull: false,

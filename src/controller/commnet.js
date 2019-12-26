@@ -4,6 +4,7 @@ const errorResolver = async (fn, ctx) => {
     try {
         await fn()
     } catch(err) {
+        console.log(err)
         ctx.body = {
             success: false,
             err
@@ -13,11 +14,11 @@ const errorResolver = async (fn, ctx) => {
 
 const commentController = {
     createComment: async (ctx, next) => {
-        const { key, commentContent, email, nickname, website, parentId, title, url } = ctx.request.body
+        const { key, commentContent, email, nickname, website, parentId, title, url, rootId } = ctx.request.body
 
         await errorResolver(async () => {
             const [ post ] = await dbController.findOrCreatePost(key, title, url)
-            const comment = await dbController.createComment(post.id, commentContent, email, nickname, website, parentId)
+            const comment = await dbController.createComment(post.id, commentContent, email, nickname, website, rootId, parentId)
 
             ctx.body = {
                 success: true,
@@ -28,18 +29,30 @@ const commentController = {
         return next()
     },
     getComments: async (ctx, next) => {
-        const key = ctx.params.key
+        const { key, page = 1, pageSize = 15 } = ctx.params
         
         await errorResolver(async () => {
             const post = await dbController.findPost(key)
-            const mainComments = await dbController.getMainComments(post.id)
-            const childComments = await dbController.getChildComments(post.id)
+            if (post) {
+                const { count, rows: mainComments } = await dbController.getMainComments(post.id, parseInt(page), parseInt(pageSize))
+                const mainCommentsIds = mainComments.map(comment => comment.id)
+                const childComments = await dbController.getChildComments(post.id, mainCommentsIds)
 
-            ctx.body = {
-                success: true,
-                data: {
-                    mainComments,
-                    childComments
+                ctx.body = {
+                    success: true,
+                    data: {
+                        mainComments,
+                        childComments
+                    },
+                    count
+                }
+            } else {
+                ctx.body = {
+                    success: true,
+                    data: {
+                        mainComments: [],
+                        childComments: []
+                    }
                 }
             }
         }, ctx)

@@ -21,15 +21,42 @@
         #comment-btns {
             background-color: #f9fafb;
 
-            .emoji {
+            .emoji, .user-info-button {
                 position: relative;
                 float: left!important;
+                padding-top: calc((0.8rem / 2) + 4px);
+                padding-bottom: calc((0.8rem / 2) + 4px);
+                line-height: 1.1rem;
+                height: 16px;
+
+                img {
+                    width: 1rem;
+                    position: relative;
+                    top: 2px;
+                    opacity: .6;
+                }
+            }
+
+            .user-info-button {
+                padding-right: 7.5px;
+                padding-left: 7.5px;
+                margin-left: 7.5px;
+                
+                img {
+                    opacity: .8;
+                }
+            }
+
+            .emoji {
+                padding-left: 7.5px;
+                padding-right: 7.5px;
             }
 
             a {
                 padding: 10px 15px;
                 float: right;
                 cursor: pointer;
+                font-size: .8rem;
 
                 &.submit {
                     background-color: #5bb7ed;
@@ -39,19 +66,20 @@
         }
     }
 
-    #emoji-select-box {
+    #emoji-select-box, #user-info-box {
         position: absolute;
         visibility: hidden;
+        top: 0;
 
-        &.show-selection {
-            animation: showSelection .45s ease forwards;
+        &.show-box {
+            animation: showBox .45s ease forwards;
         }
 
-        &.hide-selection {
-            animation: hideSelection .45s ease forwards;
+        &.hide-box {
+            animation: hideBox .45s ease forwards;
         }
 
-        .emoji-select-content {
+        .box-content {
             padding: 12px 16px;
             background-color: #fff;
             background-clip: padding-box;
@@ -70,18 +98,17 @@
             }
         }
 
-        .emoji-select-arrow {
+        .box-arrow {
             position: absolute;
             display: block;
             background: transparent;
             border-style: solid;
             border-width: 4.24264069px;
-            bottom: -4px;
-            border-top-color: transparent;
-            border-right-color: #fff;
-            border-bottom-color: #fff;
-            border-left-color: transparent;
-            box-shadow: 3px 3px 7px rgba(0,0,0,0.07);
+            top: -4px;
+            border-top-color: #fff;
+            border-right-color: transparent;
+            border-bottom-color: transparent;
+            border-left-color: #fff;
             left: 40px;
             transform: rotate(45deg)
         }
@@ -95,7 +122,7 @@
         list-style: none;
 
         & > li > ul, & > li > ul > li > ul {
-            padding-left: 40px;
+            padding-left: 50px;
         }
 
         li, ul {
@@ -105,6 +132,12 @@
 
         .comment-list-item {
             position: relative;
+
+            &:last-child {
+                .comment-content {
+                    padding-bottom: 10px!important;
+                }
+            }
 
             .avatar {
                 width: 50px;
@@ -171,11 +204,70 @@
         }
     }
 
+    #load-more {
+        padding: 10px 15px;
+        border-radius: 4px;
+        display: inline-block;
+        position: relative;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 1px solid #ddd;
+        color: #ddd;
+        cursor: pointer;
+        background-color: transparent;
+        transition: all .45s ease;
+        font-size: .8rem;
+
+        &:hover {
+            color: #5bb7ed;
+            border-color: #5bb7ed;
+        }
+    }
+
+    #notification {
+        position: fixed;
+        padding: 10px 15px;
+        border: 1px solid #e9e9e9;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        top: -100px; //25px
+        left: 50%;
+        transform: translateX(-50%);
+        background: #fff;
+        border-radius: 4px;
+        max-width: 300px;
+        visibility: hidden;
+        z-index: 5;
+
+        &.show {
+            animation: showNoti .45s ease forwards;
+        }
+
+        &.hide {
+            animation: hideNoti .45s ease forwards;
+        }
+
+        .icon {
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            top: 6px;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
+
+            img {
+                width: 30px;
+            }
+        }
+
+        .content {
+            padding-left: 36px;
+        }
+    }
+
     .clear {
         clear: both;
     }
 
-    @keyframes showSelection {
+    @keyframes showBox {
         0% {
             visibility: visible;
             opacity: 0;
@@ -187,7 +279,7 @@
         }
     }
 
-    @keyframes hideSelection {
+    @keyframes hideBox {
         0% {
             opacity: 1;
             visibility: visible;
@@ -196,6 +288,30 @@
         100% {
             opacity: 0;
             visibility: hidden;
+        }
+    }
+
+    @keyframes showNoti {
+        0% {
+            visibility: visible;
+            top: -100px;
+        }
+
+        100% {
+            visibility: visible;
+            top: 25px;
+        }
+    }
+
+    @keyframes hideNoti {
+        0% {
+            visibility: visible;
+            top: 25px;
+        }
+
+        100% {
+            visibility: hidden;
+            top: -100px;
         }
     }
 }

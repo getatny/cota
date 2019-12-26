@@ -4,29 +4,40 @@ const post = cotaDatabase.post
 const Op = cotaDatabase.Sequelize.Op
 
 const model = {
-    getComments(postId) {
-        return comment.findAll({ where: { postId } })
+    getComments(postId, page, pageSize) {
+        return comment.findAll({ 
+            where: { postId }, 
+            order: cotaDatabase.Sequelize.literal('createdAt DESC')
+        })
     },
-    getMainComments(postId) {
+    getMainComments(postId, page, pageSize) {
+        return comment.findAndCountAll({ 
+            where: {
+                [Op.and]: [
+                    { postId },
+                    { parentId: 0 }
+                ]
+            },
+            limit: pageSize,
+            offset: (page - 1) * pageSize,
+            order: cotaDatabase.Sequelize.literal('createdAt DESC')
+        })
+    },
+    getChildComments(postId, parentIds) {
         return comment.findAll({ where: {
             [Op.and]: [
                 { postId },
-                { parentId: 0 }
-            ]
-        } })
-    },
-    getChildComments(postId) {
-        return comment.findAll({ where: {
-            [Op.and]: [
-                { postId },
-                { parentId: {
-                    [Op.gt]: 0
+                { rootId: {
+                    [Op.and]: {
+                        [Op.gt]: 0,
+                        [Op.or]: parentIds
+                    }
                 } }
             ]
         } })
     },
-    createComment(postId, commentContent, email, nickname, website, parentId) {
-        return comment.create({ postId, email, nickname, website, parentId, comment: commentContent })
+    createComment(postId, commentContent, email, nickname, website, rootId, parentId) {
+        return comment.create({ postId, email, nickname, website, parentId, comment: commentContent, rootId })
     },
     deleteComments(lists) {
         return comment.destroy({ where: {
@@ -35,6 +46,13 @@ const model = {
     },
     findPost(key) {
         return post.findOne({ where: { key } })
+    },
+    findPosts(page, pageSize) {
+        return post.findAll({
+            limit: pageSize,
+            offset: (page - 1) * pageSize,
+            order: cotaDatabase.Sequelize.literal('createdAt DESC')
+        })
     },
     findOrCreatePost(key, title, url) {
         return post.findOrCreate({ where: { key }, defaults: { title, url } })

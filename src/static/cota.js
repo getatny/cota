@@ -1,7 +1,13 @@
 (function(d) {
-    const gravatarMirror = 'https://dn-qiniu-avatar.qbox.me/avatar'
+    const cota = d.getElementById('cota')
+    if (!cota) { // if this page doesn't contain any element id called 'cota', below code will never run.
+        return
+    }
 
-    const http = {
+    const gravatarMirror = 'https://dn-qiniu-avatar.qbox.me/avatar'
+    const serverPath = getServerPathByJSLink()
+
+    const http = { // a simple http query util
         get: (url) => {
             return fetch(url)
         },
@@ -25,9 +31,11 @@
         }
     }
 
+    let commentPage = 1 // current comment page number
+    let commentPageSize = 10 // how many comments will be shown per page
+
     importCss()
 
-    const cota = d.getElementById('cota')
     let commentTo = null // null: to this post; object: to this comment
 
     // comment-box el
@@ -35,11 +43,16 @@
     commentBox.classList.add('comment-box')
     commentBox.innerHTML = '<textarea class="comment-input"></textarea><div id="comment-btns"><div class="clear"></div></div>'
     cota.prepend(commentBox)
+    // user infomation button
+    const userInfoButton = d.createElement('a')
+    userInfoButton.classList.add('user-info-button')
+    userInfoButton.innerHTML = `<img src="${serverPath}/imgs/profile.png" alt="profile" />`
+    userInfoButton.addEventListener('click', showPopoverBox)
     // emoji button el
     const emojiButton = d.createElement('a')
     emojiButton.classList.add('emoji')
-    emojiButton.innerText = 'Emoji'
-    emojiButton.addEventListener('click', showEmojiSelectBox)
+    emojiButton.innerHTML = `<img src="${serverPath}/imgs/emoticon.png" alt="emoticon" />`
+    emojiButton.addEventListener('click', showPopoverBox)
     // submit button el
     const submitButton = d.createElement('a')
     submitButton.classList.add('submit')
@@ -58,17 +71,27 @@
     let emojiSelectBoxStatuts = false
     const emojiSelectBox = d.createElement('div')
     emojiSelectBox.setAttribute('id', 'emoji-select-box')
-    emojiSelectBox.innerHTML = '<div class="emoji-select-arrow"></div>'
+    emojiSelectBox.innerHTML = '<div class="box-arrow"></div>'
     const emojiSelectBoxContent = d.createElement('div')
-    emojiSelectBoxContent.classList.add('emoji-select-content')
+    emojiSelectBoxContent.classList.add('box-content')
     emojiSelectBox.prepend(emojiSelectBoxContent)
-    d.documentElement.addEventListener('click', hideEmojiSelectBox)
+    // user infomation box
+    let userInfoBoxStatuts = false
+    const userInfoBox = d.createElement('div')
+    userInfoBox.setAttribute('id', 'user-info-box')
+    userInfoBox.innerHTML = '<div class="box-arrow"></div>'
+    const userInfoBoxContent = d.createElement('div')
+    userInfoBoxContent.classList.add('box-content')
+    userInfoBox.prepend(userInfoBoxContent)
+    d.documentElement.addEventListener('click', hidePopoverBox)
     // inject element
     d.getElementById('comment-btns').prepend(submitButton)
     d.getElementById('comment-btns').prepend(cancelReplyButton)
     d.getElementById('comment-btns').prepend(emojiButton)
+    d.getElementById('comment-btns').prepend(userInfoButton)
     cota.append(commentListEl)
     cota.append(emojiSelectBox)
+    cota.append(userInfoBox)
 
     renderCommentList()
 
@@ -83,13 +106,12 @@
         Array.from(document.getElementsByTagName('link')).forEach(item => item.href.indexOf('cota.min.css') > -1 ? ifCssAlreadyLoad = true : null)
 
         if (!ifCssAlreadyLoad) {
-            const serverPath = getServerPathByJSLink()
             const styleLink = d.createElement('link')
             styleLink.rel = 'stylesheet'
             styleLink.type = 'text/css'
             styleLink.href = `${serverPath}/cota.min.css`
             d.head.append(styleLink)
-            console.log('load css')
+            console.log('load necessary css of Cota')
         }
     }
 
@@ -98,7 +120,7 @@
         el.prepend(commentBox)
     }
 
-    function cancelReply(e) {
+    function cancelReply() {
         // hide child comment box
         d.getElementsByClassName('comment-box')[0].remove()
 
@@ -111,7 +133,7 @@
     // render comment lsit
     function renderCommentList() {
         getCommentFromServer().then(res => {
-            const commentList = res
+            const commentList = res.data
 
             // render main comment
             commentList.mainComments.forEach(item => {
@@ -122,14 +144,24 @@
                 const commentListItem = createCommentItem(item, true)
                 d.querySelector(`#comment-list-item-${item.parentId} .child`).append(commentListItem)
             })
+
+            if (res.count > commentPageSize) {
+                // load more comments button
+                const loadMoreCommentsButton = d.createElement('div')
+                loadMoreCommentsButton.setAttribute('id', 'load-more')
+                loadMoreCommentsButton.innerText = 'Load More'
+                loadMoreCommentsButton.addEventListener('click', loadMoreComments)
+                cota.append(loadMoreCommentsButton)
+            }
         })
     }
 
-    function createCommentItem(item, child = false) {
+    function createCommentItem(item) {
         const commentListItem = d.createElement('li')
         commentListItem.classList.add('comment-list-item')
         commentListItem.setAttribute('id', 'comment-list-item-' + item.id)
         commentListItem.setAttribute('data-id', item.id)
+        commentListItem.setAttribute('data-rootid', item.rootId ? item.rootId : item.id)
         commentListItem.innerHTML = `<div class="avatar"><img src="${gravatarMirror}/${md5(item.email)}" alt="${item.nickname}" /></div><ul class="child"></ul>`
         // comment detail el
         const commentDetail = d.createElement('div')
@@ -144,7 +176,7 @@
         // comment info el
         const commentInfo = d.createElement('div')
         commentInfo.classList.add('comment-info')
-        if (item.website !== '') {
+        if (item.website) {
             commentInfo.innerHTML = `<a class="nickname" href="${item.website}">${item.nickname}</a><div class="clear"></div>`
         } else {
             commentInfo.innerHTML = `<span class="nickname">${item.nickname}</span><div class="clear"></div>`
@@ -174,53 +206,77 @@
     // submit comment when user click submit button
     function getCommentAndSubmit(e) {
         const value = e.target.parentElement.previousElementSibling.value
-        const server = getServerPathByJSLink()
-        http.post(server + '/rest/comment/create', {
-            key: md5(d.location.pathname),
-            commentContent: value,
-            email: 'wangmaozhu@foxmail.com',
-            nickname: 'Matthew',
-            title: d.title,
-            url: d.location.href,
-            parentId: commentTo ? parseInt(commentTo.dataset.id) : 0
-        }).then(res => res.json()).then(res => {
-            const commentListItem = createCommentItem({
-                id: res.data.id,
-                postId: res.data.postId,
-                parentId: res.data.parentId,
-                email: res.data.email,
-                website: res.data.website ? res.data.website : '',
-                nickname: res.data.nickname,
-                comment: res.data.comment
-            })
+        
+        if (value !== '') {
+            http.post(`${serverPath}/rest/comment/create`, {
+                key: md5(d.location.pathname),
+                commentContent: value,
+                email: 'wangmaozhu@foxmail.com',
+                nickname: 'Matthew',
+                title: d.title,
+                url: d.location.href,
+                parentId: commentTo ? parseInt(commentTo.dataset.id) : 0,
+                rootId: commentTo ? parseInt(commentTo.dataset.rootid) : 0
+            }).then(res => res.json()).then(res => {
+                console.log(res.data.website)
+                const commentListItem = createCommentItem({
+                    id: res.data.id,
+                    postId: res.data.postId,
+                    parentId: res.data.parentId,
+                    rootId: res.data.rootId,
+                    email: res.data.email,
+                    website: res.data.website,
+                    nickname: res.data.nickname,
+                    comment: res.data.comment
+                })
 
-            if (res.success) {
-                if (commentTo === null) {
-                    commentListEl.prepend(commentListItem)
+                if (res.success) {
+                    notify('Submit comment successfully!', 'success')
+                    if (commentTo === null) {
+                        commentListEl.prepend(commentListItem)
+                    } else {
+                        commentTo.children[2].append(commentListItem)
+                    }
+                    
+                    if (e.target.previousElementSibling.style.display === 'block') {
+                        e.target.previousElementSibling.click()
+                    }
+                    e.target.parentElement.previousElementSibling.value = ''
                 } else {
-                    commentTo.children[2].append(commentListItem)
+                    notify('Submit comment failed!', 'failed')
                 }
-                
-                if (e.target.previousElementSibling.style.display === 'block') {
-                    e.target.previousElementSibling.click()
-                }
-                e.target.parentElement.previousElementSibling.value = ''
-            }
-        })
+            }).catch(() => notify('Submit comment failed!', 'failed'))
+        } else {
+            notify('Comment cannot be empty!', 'failed')
+        }
     }
 
-    function showEmojiSelectBox(e) {
-        const position = getElementPagePosition(e.target)
-        const left = (position.x + ((e.target.offsetWidth) / 2) - 42)
+    function showPopoverBox(e) {
+        let target = e.target
+        let actualTarget = null
 
-        emojiSelectBox.style.cssText = `top: ${position.y - emojiSelectBox.offsetHeight - 9}px; left: ${left}px`
-        emojiSelectBox.className = 'show-selection'
-        emojiSelectBoxStatuts = true
+        if (target.className === 'emoji' || target.alt === 'emoticon') {
+            actualTarget = emojiSelectBox
+            emojiSelectBoxStatuts = true
+        } else if (target.className === 'user-info-button' || target.alt === 'profile') {
+            actualTarget = userInfoBox
+            userInfoBoxStatuts = true
+        }
+
+        target.alt ? target = target.parentElement : null
+        const position = getElementPagePosition(target)
+        const left = (position.x + ((target.offsetWidth) / 2) - 44)
+
+        actualTarget.style.cssText = `top: ${position.y + emojiButton.offsetHeight + 9}px; left: ${left}px`
+        actualTarget.className = 'show-box'
     }
 
-    function hideEmojiSelectBox(e) {
-        if (e.target.closest('#emoji-select-box') === null && e.target.className !== 'emoji' && emojiSelectBoxStatuts === true) {
-            emojiSelectBox.className = 'hide-selection'
+    function hidePopoverBox(e) {
+        if (emojiSelectBoxStatuts && e.target.closest('#emoji-select-box') === null && e.target.className !== 'emoji' && e.target.alt !== 'emoticon') {
+            emojiSelectBox.className = 'hide-box'
+        } 
+        if (userInfoBoxStatuts && e.target.closest('#user-info-box') === null && e.target.className !== 'user-info-button' && e.target.alt !== 'profile') {
+            userInfoBox.className = 'hide-box'
         }
     }
 
@@ -253,14 +309,44 @@
         return { x: actualLeft, y: actualTop }
     }
 
+    // custom notification component
+    function notify(msg, type = 'info', delay = 3000) {
+        let notification = null
+        const existNotification = d.getElementById('notification')
+        if (!existNotification) {
+            const noti = d.createElement('div')
+            noti.setAttribute('id', 'notification')
+            noti.classList.add('show')
+            noti.innerHTML = `<div class="icon"><img src="${serverPath}/imgs/${type}.png" alt="${type}" /></div><div class="content">${msg}</div>`
+            notification = noti
+            cota.append(noti)
+        } else {
+            existNotification.children[0].children[0].src = `${serverPath}/imgs/${type}.png`
+            existNotification.children[0].children[0].alt = type
+            existNotification.children[1].innerText = msg
+            existNotification.className = 'show'
+            notification = existNotification
+        }
+
+        setTimeout(() => {
+            notification.className = 'hide'
+        }, delay)
+    }
+
     // fetch comment list from server
     function getCommentFromServer() {
-        const server = getServerPathByJSLink()
-        return http.get(`${server}/rest/comments/${md5(d.location.pathname)}`).then(res => res.json()).then(res => {
+        return http.get(`${serverPath}/rest/comments/${md5(d.location.pathname)}/${commentPage}/${commentPageSize}`).then(res => res.json()).then(res => {
             if (res.success) {
-                return res.data
+                return {
+                    data: res.data,
+                    count: res.count
+                }
             }
         })
+    }
+
+    function loadMoreComments(e) {
+        
     }
 
     function getEmojiFromServer() {
@@ -269,8 +355,8 @@
 
     function getServerPathByJSLink() {
         const schema = Array.from(document.scripts).find(item => item.src.indexOf('cota.min.js') > -1).src.match(/^(\S*):\/\//)[1]
-        const serverPath = Array.from(document.scripts).find(item => item.src.indexOf('cota.min.js') > -1).src.match(/https:\/\/(\S*)\//)[1]
-        return `${schema}://${serverPath}`
+        const server = Array.from(document.scripts).find(item => item.src.indexOf('cota.min.js') > -1).src.match(/https:\/\/(\S*)\//)[1]
+        return `${schema}://${server}`
     }
 
     // ========================================================================================================== md5
