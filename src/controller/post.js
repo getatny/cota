@@ -1,18 +1,7 @@
-const dbController = require('../model')
+const dbController = require('../model').post
+const { errorResolver } = require('./utils')
 
-const errorResolver = async (fn, ctx) => {
-    try {
-        await fn()
-    } catch(err) {
-        console.log(err)
-        ctx.body = {
-            success: false,
-            err
-        }
-    }
-}
-
-const postController = {
+const controller = {
     getPosts: async (ctx, next) => {
         const { page = 1, pageSize = 20 } = ctx.params
 
@@ -29,4 +18,4 @@ const postController = {
     }
 }
 
-module.exports = postController
+module.exports = controller

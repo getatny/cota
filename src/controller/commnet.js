@@ -1,18 +1,7 @@
-const dbController = require('../model')
+const dbController = require('../model').comment
+const { errorResolver } = require('./utils')
 
-const errorResolver = async (fn, ctx) => {
-    try {
-        await fn()
-    } catch(err) {
-        console.log(err)
-        ctx.body = {
-            success: false,
-            err
-        }
-    }
-}
-
-const commentController = {
+const controller = {
     createComment: async (ctx, next) => {
         const { key, commentContent, email, nickname, website, parentId, title, url, rootId } = ctx.request.body
 
@@ -75,4 +64,4 @@ const commentController = {
     }
 }
 
-module.exports = commentController
+module.exports = controller

@@ -20,6 +20,7 @@ app.use(cors({
 }))
 app.use(json({ pretty: false, param: 'pretty' }))
 app.use(serve('dist'))
+app.use(serve('admin-public')) // load admin portal
 app.use(router.middleware())
 
 app.listen(config.port, () => {
