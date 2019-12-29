@@ -1,4 +1,4 @@
-const http = { // a simple http query util
+export const http = { // a simple http query util
     get: (url) => {
         return fetch(url)
     },
@@ -20,8 +20,4 @@ const http = { // a simple http query util
             body: JSON.stringify(data)
         })
     }
-}
-
-export default {
-    http
 }

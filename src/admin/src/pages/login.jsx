@@ -3,6 +3,7 @@ import { Form, Icon, Input, Checkbox, Button, Divider, message } from 'antd';
 import { useDispatch } from "react-redux";
 import { login as loginEvent } from '../store/actions'
 import { http } from '../components/utils'
+import Config from '../config'
 import '../styles/login.less'
 
 const Password = Input.Password
@@ -12,10 +13,12 @@ const Login = (props) => {
     const [ logining, setLogining ] = useState(false)
     const { getFieldDecorator } = props.form
 
+    const env = process.env.NODE_ENV === 'development' ? Config.dev : null
+
     const login = ({username, password}) => {
         return new Promise(async (resolve, reject) => {
             try {
-                const result = await http.post('/rest/login', { username, password })
+                const result = await http.post(`${env.server}/rest/login`, { username, password })
                 resolve(await result.json())
             } catch (e) {
                 console.log(e)
@@ -27,9 +30,9 @@ const Login = (props) => {
     // handle the event of submit.
     const handleSubmit = e => {
         e.preventDefault()
-        setLogining(true)
         props.form.validateFields((err, values) => {
             if (!err) {
+                setLogining(true)
                 login(values).then(res => {
                     setLogining(false)
                     if (res.success === true) {

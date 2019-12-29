@@ -1,6 +1,6 @@
 const dbController = require('../model').user
 const { errorResolver } = require('./utils')
-const bscypt = require('bscypt')
+const bcrypt = require('bcrypt')
 
 const controller = {
     getUsers: async (ctx, next) => {
@@ -58,7 +58,9 @@ const controller = {
                     err: "User doesn't exist."
                 }
             }
-        })
+        }, ctx)
+
+        return next()
     }
 }
 

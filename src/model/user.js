@@ -1,5 +1,5 @@
 const cotaDatabase= require('../../db/models')
-const post = cotaDatabase.user
+const user = cotaDatabase.user
 const Op = cotaDatabase.Sequelize.Op
 
 const model = {
