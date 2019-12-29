@@ -1,4 +1,4 @@
-const dbController = require('../model').comment
+const dbController = require('../model')
 const { errorResolver } = require('./utils')
 
 const controller = {
@@ -9,7 +9,7 @@ const controller = {
             const [ post ] = await dbController.findOrCreatePost(key, title, url)
             const comment = await dbController.createComment(post.id, commentContent, email, nickname, website, rootId, parentId)
 
-            ctx.sned(comment)
+            ctx.send(comment)
         }, ctx)
 
         return next()

@@ -12,8 +12,10 @@ router.get('/comments/:key/:page/:pageSize', commentController.getComments) // g
 router.get('/posts/:page/:pageSize', postController.getPosts) // get all posts of sepecify page
 
 // =============================================================================================== users
+router.post('/login', userController.login)
 router.get('/user/:id', userController.getUser)
 router.get('/users/:page/:pageSize', userController.getUsers)
-router.post('/login', userController.authentication)
 
-module.exports = Router({ prefix: '/admin' }).extend(router)
+const api = Router({ prefix: '/admin' }).extend(router)
+
+module.exports = api

@@ -8,20 +8,7 @@ import { login } from "./store/actions"
 import Dashboard from './pages/dashboard'
 import * as serviceWorker from './serviceWorker'
 
-const PrivateRoute = ({ component: Component, ...rest }) => {
-    let isLogin = useSelector(state => state.Auth.isLogin)
-    const localLoginStatus = JSON.parse(localStorage.getItem('cotaUserInfo'))
-    const sessionLoginStatus = JSON.parse(sessionStorage.getItem('cotaUserInfo'))
-
-    const dispatch = useDispatch()
-
-    if (!isLogin) {
-        if ((localLoginStatus !== null && localLoginStatus !== undefined) || (sessionLoginStatus !== null && sessionLoginStatus !== undefined)) {
-            dispatch(login(localLoginStatus || sessionLoginStatus))
-            isLogin = true
-        }
-    }
-
+const PrivateRoute = ({ component: Component, isLogin, ...rest }) => {
     return (
         <Route {...rest} render={props => (
             isLogin ? (<Component {...props} />) : (<Redirect to={{
@@ -32,20 +19,7 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
     )
 }
 
-const HideRoute = ({ component: Component, ...rest }) => {
-    let isLogin = useSelector(state => state.Auth.isLogin)
-    const localLoginStatus = JSON.parse(localStorage.getItem('cobaltUserInfo'))
-    const sessionLoginStatus = JSON.parse(sessionStorage.getItem('cobaltUserInfo'))
-
-    const dispatch = useDispatch()
-
-    if (!isLogin) {
-        if ((localLoginStatus !== null && localLoginStatus !== undefined) || (sessionLoginStatus !== null && sessionLoginStatus !== undefined)) {
-            dispatch(login(localLoginStatus || sessionLoginStatus))
-            isLogin = true
-        }
-    }
-
+const HideRoute = ({ component: Component, isLogin, ...rest }) => {
     return (
         <Route {...rest} render={props => (
             isLogin ? (<Redirect to={{
@@ -56,14 +30,31 @@ const HideRoute = ({ component: Component, ...rest }) => {
     )
 }
 
-const App = () => (
-    <HashRouter>
-        <Switch>
-            <PrivateRoute exact path='/' component={Dashboard} />
-            <HideRoute exact path='/login' component={Login} />
-        </Switch>
-    </HashRouter>
-)
+const App = () => {
+    let isLogin = useSelector(state => state.Auth.isLogin)
+    const localLoginInfo = JSON.parse(localStorage.getItem('cota_admin_user'))
+    const sessionLoginInfo = JSON.parse(sessionStorage.getItem('cota_user_user'))
+    const tokenExpire = localStorage.getItem('cota_admin_token_exp') || sessionStorage.getItem('cota_admin_token_exp')
+
+    const dispatch = useDispatch()
+
+    if (!isLogin) {
+        const nowTime = new Date().getTime()
+        if ((localLoginInfo && ((nowTime - tokenExpire) <= 60000 * 60 * 24 * 7)) || (sessionLoginInfo && ((nowTime - tokenExpire) <= 60000 * 60 * 24))) {
+            dispatch(login(localLoginInfo || sessionLoginInfo))
+            isLogin = true
+        }
+    }
+
+    return (
+        <HashRouter>
+            <Switch>
+                <PrivateRoute exact path='/' component={Dashboard} isLogin={isLogin}/>
+                <HideRoute exact path='/login' component={Login} isLogin={isLogin}/>
+            </Switch>
+        </HashRouter>
+    )
+}
 
 ReactDOM.render(
     <Provider store={Store}>

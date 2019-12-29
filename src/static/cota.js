@@ -354,7 +354,7 @@
 
     function getServerPathByJSLink() {
         const schema = Array.from(document.scripts).find(item => item.src.indexOf('cota.min.js') > -1).src.match(/^(\S*):\/\//)[1]
-        const server = Array.from(document.scripts).find(item => item.src.indexOf('cota.min.js') > -1).src.match(/https:\/\/(\S*)\//)[1]
+        const server = Array.from(document.scripts).find(item => item.src.indexOf('cota.min.js') > -1).src.match(/[https|http]:\/\/(\S*)\//)[1]
         return `${schema}://${server}`
     }
 

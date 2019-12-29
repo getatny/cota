@@ -1,5 +1,4 @@
 node_modules/
 yarn.lock
 db/cota.sqlite
-admin-public
 .idea

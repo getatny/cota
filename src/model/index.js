@@ -3,7 +3,7 @@ const post = require('./post')
 const user = require('./user')
 
 module.exports = {
-    comment,
-    post,
-    user
+    ...comment,
+    ...post,
+    ...user
 }

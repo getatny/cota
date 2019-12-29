@@ -1,4 +1,3 @@
-  
 const sendHandle = () => {
     // 处理请求成功方法
     const render = ctx => {

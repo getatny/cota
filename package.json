@@ -29,6 +29,8 @@
   "scripts": {
     "start": "node src/index.js",
     "export": "uglifyjs src/static/cota.js -c -m -o dist/cota.min.js && lessc src/static/cota.less dist/cota.min.css",
-    "migration": "sequelize-cli db:migrate && sequelize-cli db:seed:all"
+    "migrate": "sequelize-cli db:migrate && sequelize-cli db:seed:all",
+    "yarn-install": "yarn install && cd src/admin && yarn install",
+    "npm-install": "npm install && cd src/admin && npm install"
   }
 }

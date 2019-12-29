@@ -1,4 +1,4 @@
-const dbController = require('../model').user
+const dbController = require('../model')
 const { errorResolver } = require('./utils')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')

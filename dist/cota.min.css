@@ -23,8 +23,8 @@
 #cota .comment-box #comment-btns .user-info-button {
   position: relative;
   float: left!important;
-  padding-top: calc((0.8rem / 2) + 4px);
-  padding-bottom: calc((0.8rem / 2) + 4px);
+  padding-top: calc((0.8rem / 2) + 3px);
+  padding-bottom: calc((0.8rem / 2) + 3px);
   line-height: 1.1rem;
   height: 16px;
 }

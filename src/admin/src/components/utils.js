@@ -1,16 +1,17 @@
 import axios from 'axios'
 
 axios.interceptors.request.use(config => {
-    const token = localStorage.getItem('cota_admin_token');
+    const token = JSON.parse(localStorage.getItem('cota_admin_user')).token;
     config.headers.common['Authorization'] = 'Bearer ' + token;
     return config;
 })
 
 axios.interceptors.response.use(res => {
-    if (res.success) {
-        return res.response;
+    const data = res.data
+    if (data.success) {
+        return data.response;
     } else {
-        return Promise.reject(res.msg);
+        return Promise.reject(data.msg);
     }
 }, err => {
     return Promise.reject('请求失败！');

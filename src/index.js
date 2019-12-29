@@ -2,7 +2,8 @@ const Koa = require('koa')
 const serve = require('koa-static')
 const json = require('koa-json')
 const logger = require('koa-logger')
-const routers = require('./router')
+const publicApi = require('./router/public')
+const adminApi = require('./router/admin')
 const config = require('./config')
 const cors = require('@koa/cors')
 const bodyParser = require('koa-bodyparser')
@@ -14,6 +15,8 @@ const app = new Koa()
 
 app.use(logger())
 app.use(bodyParser())
+app.use(serve('dist'))
+app.use(serve('admin-public')) // load admin portal
 app.use(cors({
     origin: function(ctx) {
         let isWhiteList = null
@@ -22,14 +25,12 @@ app.use(cors({
     }
 }))
 app.use(json({ pretty: false, param: 'pretty' }))
-app.use(serve('dist'))
-app.use(serve('admin-public')) // load admin portal
 
-app.use(responseHandler)
+app.use(responseHandler())
 app.use(authErrorHandler)
-app.use(routers.public.middleware())
-app.use(koajwt({ secret: config.jwtSecret }.unless({ path: [/\/rest\/login/] })))
-addp.use(routers.admin.middleware())
+app.use(koajwt({ secret: config.jwtSecret }).unless({ path: [/\/admin\/login/, /\/rest/] }))
+app.use(publicApi.middleware())
+app.use(adminApi.middleware())
 
 app.listen(config.port, () => {
     console.info(`[Info] ${Date(Date.now()).toLocaleString()}: Cota service started on port: ${config.port}`)

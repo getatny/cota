@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Icon, Input, Checkbox, Button, Divider, message } from 'antd';
 import { useDispatch } from "react-redux";
 import { login as loginEvent } from '../store/actions'
-import { http } from '../components/utils'
+import http from '../components/utils'
 import Config from '../config'
 import '../styles/login.less'
 
@@ -16,7 +16,7 @@ const Login = (props) => {
     const env = process.env.NODE_ENV === 'development' ? Config.dev : null
 
     const login = ({ username, password, remember }) => {
-        return http.post(`${env.server}/rest/login`, { username, password, remember })
+        return http.post(`${env.server}/admin/login`, { username, password, remember })
     }
 
     // handle the event of submit.
@@ -27,16 +27,25 @@ const Login = (props) => {
                 setLogining(true)
                 login(values).then(res => {
                     if (values.remember) {
-                        localStorage.setItem('cota_admin_token', JSON.stringify({username: res.token}))
+                        localStorage.setItem('cota_admin_user', JSON.stringify({
+                            id: res.id,
+                            username: res.username,
+                            token: res.token
+                        }))
                         localStorage.setItem('cota_admin_token_exp', new Date().getTime())
                     } else {
-                        sessionStorage.setItem('cota_admin_token', JSON.stringify({username: res.token}))
+                        sessionStorage.setItem('cota_admin_user', JSON.stringify({
+                            id: res.id,
+                            username: res.username,
+                            token: res.token
+                        }))
                         sessionStorage.setItem('cota_admin_token_exp', new Date().getTime())
                     }
 
                     dispatch(loginEvent({ username: res.username, nickname: res.nickname, email: res.email }))
                     props.history.push('/')
                 }).catch(e => {
+                    console.log(e)
                     setLogining(false)
                     message.error(e)
                 })

@@ -1,4 +1,4 @@
-const dbController = require('../model').post
+const dbController = require('../model')
 const { errorResolver } = require('./utils')
 
 const controller = {
