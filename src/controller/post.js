@@ -7,11 +7,7 @@ const controller = {
 
         await errorResolver(async () => {
             const posts = await dbController.findPosts(parseInt(page), parseInt(pageSize))
-
-            ctx.body = {
-                success: true,
-                data: posts
-            }
+            ctx.send(posts)
         }, ctx)
 
         return next()

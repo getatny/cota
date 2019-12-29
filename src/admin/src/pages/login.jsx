@@ -15,16 +15,8 @@ const Login = (props) => {
 
     const env = process.env.NODE_ENV === 'development' ? Config.dev : null
 
-    const login = ({username, password}) => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const result = await http.post(`${env.server}/rest/login`, { username, password })
-                resolve(await result.json())
-            } catch (e) {
-                console.log(e)
-                reject(e)
-            }
-        })
+    const login = ({ username, password, remember }) => {
+        return http.post(`${env.server}/rest/login`, { username, password, remember })
     }
 
     // handle the event of submit.
@@ -34,22 +26,19 @@ const Login = (props) => {
             if (!err) {
                 setLogining(true)
                 login(values).then(res => {
-                    setLogining(false)
-                    if (res.success === true) {
-                        if (values.remember) {
-                            localStorage.setItem('cobaltUserInfo', JSON.stringify({username: values.username}))
-                        } else {
-                            sessionStorage.setItem('cobaltUserInfo', JSON.stringify({username: values.username}))
-                        }
-
-                        dispatch(loginEvent({ username: values.username }))
-                        props.history.push('/')
+                    if (values.remember) {
+                        localStorage.setItem('cota_admin_token', JSON.stringify({username: res.token}))
+                        localStorage.setItem('cota_admin_token_exp', new Date().getTime())
                     } else {
-                        message.error(res.err)
+                        sessionStorage.setItem('cota_admin_token', JSON.stringify({username: res.token}))
+                        sessionStorage.setItem('cota_admin_token_exp', new Date().getTime())
                     }
+
+                    dispatch(loginEvent({ username: res.username, nickname: res.nickname, email: res.email }))
+                    props.history.push('/')
                 }).catch(e => {
                     setLogining(false)
-                    message.error('Login error')
+                    message.error(e)
                 })
             }
         })
@@ -76,7 +65,7 @@ const Login = (props) => {
                         {getFieldDecorator('remember', {
                             valuePropName: 'checked',
                             initialValue: true,
-                        })(<Checkbox>记住我</Checkbox>)}
+                        })(<Checkbox>7天内免登陆</Checkbox>)}
                     </Form.Item>
                     <Form.Item>
                         <Button loading={logining} size='large' type="primary" htmlType="submit" className="login-form-button">

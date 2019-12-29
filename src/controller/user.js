@@ -1,6 +1,7 @@
 const dbController = require('../model').user
 const { errorResolver } = require('./utils')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 const controller = {
     getUsers: async (ctx, next) => {
@@ -9,11 +10,10 @@ const controller = {
         await errorResolver(async () => {
             const { count, rows: users } = await dbController.findUsers(parseInt(page), parseInt(pageSize))
 
-            ctx.body = {
-                success: true,
+            ctx.send({
                 data: users,
                 count
-            }
+            })
         }, ctx)
 
         return next()
@@ -23,17 +23,13 @@ const controller = {
 
         await errorResolver(async () => {
             const user = await dbController.findUserById(parseInt(userId))
-
-            ctx.body = {
-                success: true,
-                data: user
-            }
+            ctx.send(user)
         }, ctx)
 
         return next()
     },
-    authentication: async (ctx, next) => {
-        const { username, password } = ctx.request.body
+    login: async (ctx, next) => {
+        const { username, password, remember } = ctx.request.body
 
         await errorResolver(async () => {
             const user = await dbController.findUserByUsername(username)
@@ -42,21 +38,18 @@ const controller = {
                 const authPass = await bcrypt.compare(password, user.password)
 
                 if (authPass) {
-                    ctx.body = {
-                        success: true,
-                        data: user
-                    }
+                    ctx.send({
+                        user,
+                        token: jwt.sign({
+                            id: user.id,
+                            username: user.username
+                        }, 'cotaToken', { expiresIn: remember ? '7d' : '1d' })
+                    })
                 } else {
-                    ctx.body = {
-                        success: false,
-                        err: "User password is wrong."
-                    }
+                    ctx.sendError('User password is wrong.')
                 }
             } else {
-                ctx.body = {
-                    success: false,
-                    err: "User doesn't exist."
-                }
+                ctx.sendError("User doesn't exist.")
             }
         }, ctx)
 

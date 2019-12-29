@@ -4,10 +4,7 @@ module.exports = {
             await fn()
         } catch(err) {
             console.log(err)
-            ctx.body = {
-                success: false,
-                err
-            }
+            ctx.sendError(err)
         }
     }
 }

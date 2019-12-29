@@ -2,10 +2,13 @@ const Koa = require('koa')
 const serve = require('koa-static')
 const json = require('koa-json')
 const logger = require('koa-logger')
-const router = require('./router')
+const routers = require('./router')
 const config = require('./config')
 const cors = require('@koa/cors')
 const bodyParser = require('koa-bodyparser')
+const koajwt = require('koa-jwt')
+const responseHandler = require('./middleware/responseHandler')
+const authErrorHandler = require('./middleware/authErrorHandler')
 
 const app = new Koa()
 
@@ -21,7 +24,12 @@ app.use(cors({
 app.use(json({ pretty: false, param: 'pretty' }))
 app.use(serve('dist'))
 app.use(serve('admin-public')) // load admin portal
-app.use(router.middleware())
+
+app.use(responseHandler)
+app.use(authErrorHandler)
+app.use(routers.public.middleware())
+app.use(koajwt({ secret: config.jwtSecret }.unless({ path: [/\/rest\/login/] })))
+addp.use(routers.admin.middleware())
 
 app.listen(config.port, () => {
     console.info(`[Info] ${Date(Date.now()).toLocaleString()}: Cota service started on port: ${config.port}`)

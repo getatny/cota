@@ -9,10 +9,7 @@ const controller = {
             const [ post ] = await dbController.findOrCreatePost(key, title, url)
             const comment = await dbController.createComment(post.id, commentContent, email, nickname, website, rootId, parentId)
 
-            ctx.body = {
-                success: true,
-                data: comment
-            }
+            ctx.sned(comment)
         }, ctx)
 
         return next()
@@ -27,22 +24,21 @@ const controller = {
                 const mainCommentsIds = mainComments.map(comment => comment.id)
                 const childComments = await dbController.getChildComments(post.id, mainCommentsIds)
 
-                ctx.body = {
-                    success: true,
-                    data: {
+                ctx.send({
+                    comments: {
                         mainComments,
                         childComments
                     },
                     count
-                }
+                })
             } else {
-                ctx.body = {
-                    success: true,
-                    data: {
+                ctx.send({
+                    comments: {
                         mainComments: [],
                         childComments: []
-                    }
-                }
+                    },
+                    count: 0
+                })
             }
         }, ctx)
 
@@ -53,11 +49,7 @@ const controller = {
 
         await errorResolver(async () => {
             const affectedCount = await dbController.deleteComments(lists)
-
-            ctx.body = {
-                success: true,
-                affectedCount
-            }
+            ctx.send(affectedCount)
         }, ctx)
 
         return next()

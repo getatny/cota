@@ -133,7 +133,7 @@
     // render comment lsit
     function renderCommentList() {
         getCommentFromServer().then(res => {
-            const commentList = res.data
+            const commentList = res.comments
 
             // render main comment
             commentList.mainComments.forEach(item => {
@@ -218,16 +218,15 @@
                 parentId: commentTo ? parseInt(commentTo.dataset.id) : 0,
                 rootId: commentTo ? parseInt(commentTo.dataset.rootid) : 0
             }).then(res => res.json()).then(res => {
-                console.log(res.data.website)
                 const commentListItem = createCommentItem({
-                    id: res.data.id,
-                    postId: res.data.postId,
-                    parentId: res.data.parentId,
-                    rootId: res.data.rootId,
-                    email: res.data.email,
-                    website: res.data.website,
-                    nickname: res.data.nickname,
-                    comment: res.data.comment
+                    id: res.response.id,
+                    postId: res.response.postId,
+                    parentId: res.response.parentId,
+                    rootId: res.response.rootId,
+                    email: res.response.email,
+                    website: res.response.website,
+                    nickname: res.response.nickname,
+                    comment: res.response.comment
                 })
 
                 if (res.success) {
@@ -338,8 +337,8 @@
         return http.get(`${serverPath}/rest/comments/${md5(d.location.pathname)}/${commentPage}/${commentPageSize}`).then(res => res.json()).then(res => {
             if (res.success) {
                 return {
-                    data: res.data,
-                    count: res.count
+                    comments: res.response.comments,
+                    count: res.response.count
                 }
             }
         })
