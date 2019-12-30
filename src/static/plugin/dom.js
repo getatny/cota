@@ -2,11 +2,13 @@ const d = window.document
 
 const utils = {
 
-    create: function ({ type, className, id, innerHtml }, { event, fn } = {}) {
+    create: function ({ type, className, id, innerHtml, href, rel }, { event, fn } = {}) {
         const element = d.createElement(type)
         className && (element.className = className)
         innerHtml && (element.innerHTML = innerHtml)
         id && (element.setAttribute('id', id))
+        href && (element.href = href)
+        rel && (element.rel = rel)
 
         if (event) {
             element.addEventListener(event, fn)
@@ -27,12 +29,12 @@ const utils = {
         })
     },
 
-    append: function(dom, nodes) {
-        nodes.forEach(node => dom.append(node))
+    append: function(dom, nodes, fn = null) {
+        nodes.forEach(node => fn ? dom.append(fn(node)) : dom.append(node))
     },
 
-    prepend: function(dom, nodes) {
-        nodes.forEach(node => dom.prepend(node))
+    prepend: function(dom, nodes, fn = null) {
+        nodes.forEach(node => fn ? dom.append(fn(node)) : dom.append(node))
     }
 
 }

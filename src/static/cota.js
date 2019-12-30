@@ -1,7 +1,10 @@
 const md5 = require('js-md5')
 const dom = require('./plugin/dom')
-const emoticonImg = require('./imgs/emoticon.png').default
-const profileImg = require('./imgs/profile.png').default
+const emoticonImg = require('./imgs/emoticon.png')
+const profileImg = require('./imgs/profile.png')
+const successImg = require('./imgs/success.png')
+const infoImg = require('./imgs/info.png')
+const failedImg = require('./imgs/failed.png')
 
 const http = { // a simple http query util
     get: (url) => {
@@ -44,7 +47,7 @@ class CotaBase {
     userInfoBoxStatuts = false
 
     init = (options) => {
-        this.cota = options.el || this.cota
+        this.cota = this.d.getElementById(options.el)|| this.cota
         
         if (!this.cota) { // if this page doesn't contain any element id called 'cota', below code will never run.
             return
@@ -54,12 +57,12 @@ class CotaBase {
             this.emojiList = this.getEmojiFromServer()
             this.serverPath = this.getServerPathByJSLink()
 
+            this.importCSS('https://fonts.font.im/css?family=Open+Sans')
             this.generateComment()
         }
     }
 
     generateComment = () => {
-        console.log(profileImg)
         // comment-box el
         this.commentBox = dom.create({
             type: 'div',
@@ -104,12 +107,20 @@ class CotaBase {
         this.d.documentElement.addEventListener('click', this.hidePopoverBox)
 
         // inject element
-        dom.prepend(this.d.getElementById('comment-btns'), [submitButton, this.cancelReplyButton, this.emojiButton, userInfoButton])
+        dom.prepend(this.d.getElementById('comment-btns'), [submitButton, this.cancelReplyButton, userInfoButton, this.emojiButton])
         dom.append(this.cota, [this.commentListEl, this.emojiSelectBox, this.userInfoBox])
 
         this.renderCommentList()
 
-        dom.append(emojiSelectBoxContent, this.emojiList)
+        dom.append(emojiSelectBoxContent, this.emojiList, this.createEmojiEl)
+    }
+
+    importCSS = (path) => {
+        this.d.head.append(dom.create({
+            type: 'link',
+            href: path,
+            rel: 'stylesheet'
+        }))
     }
 
     renderCommentList = () => {
@@ -192,10 +203,11 @@ class CotaBase {
         })
 
         // comment info el
+        const commentDate = item.createdAt === '刚刚' ? '刚刚' : new Date(Date.parse(item.createdAt)).toLocaleString()
         const commentInfo = dom.create({
             type: 'div',
             className: 'comment-info',
-            innerHtml: item.website ? `<a class="nickname" href="${item.website}">${item.nickname}</a><div class="clear"></div>` : `<span class="nickname">${item.nickname}</span><div class="clear"></div>`
+            innerHtml: item.website ? `<a class="nickname" href="${item.website}">${item.nickname}</a><span class="comment-date">${commentDate}</span><div class="clear"></div>` : `<span class="nickname">${item.nickname}</span><span class="comment-date">${commentDate}</span><div class="clear"></div>`
         })
 
         const reply = dom.createATag(this.replyCommnet, 'reply-comment', 'Reply')
@@ -220,7 +232,7 @@ class CotaBase {
                 parentId: this.commentTo ? parseInt(this.commentTo.dataset.id) : 0,
                 rootId: this.commentTo ? parseInt(this.commentTo.dataset.rootid) : 0
             }).then(res => res.json()).then(res => {
-                const commentListItem = createCommentItem({
+                const commentListItem = this.createCommentItem({
                     id: res.response.id,
                     postId: res.response.postId,
                     parentId: res.response.parentId,
@@ -228,7 +240,8 @@ class CotaBase {
                     email: res.response.email,
                     website: res.response.website,
                     nickname: res.response.nickname,
-                    comment: res.response.comment
+                    comment: res.response.comment,
+                    createdAt: '刚刚'
                 })
 
                 if (res.success) {
@@ -282,10 +295,7 @@ class CotaBase {
     }
 
     createEmojiEl = (emoji) => {
-        const tEmoji = this.d.createElement('a')
-        tEmoji.innerText = emoji
-        tEmoji.addEventListener('click', insertEmojiToTextarea)
-        return tEmoji
+        return dom.createATag(this.insertEmojiToTextarea, null, emoji)
     }
 
     insertEmojiToTextarea = (e) => {
@@ -315,10 +325,12 @@ class CotaBase {
         let notification = null
         const existNotification = this.d.getElementById('notification')
         if (!existNotification) {
-            const noti = this.d.createElement('div')
-            noti.setAttribute('id', 'notification')
-            noti.classList.add('show')
-            noti.innerHTML = `<div class="icon"><img src="${this.serverPath}/imgs/${type}.png" alt="${type}" /></div><div class="content">${msg}</div>`
+            const noti = dom.create({
+                type: 'div',
+                id: 'notification',
+                className: 'show',
+                innerHtml: `<div class="icon"><img src="${type === 'success' ? successImg : type === 'info' ? infoImg : failedImg}" alt="${type}" /></div><div class="content">${msg}</div>`
+            })
             notification = noti
             this.cota.append(noti)
         } else {

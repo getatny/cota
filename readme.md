@@ -1,3 +1,5 @@
+![cota](https://raw.githubusercontent.com/wiki/getatny/cota/cota-github-logo.png)
+
 # Cota - Small comment system
 
 Cota 是一个使用Javascript语言编写的，以 sqlite 作为数据存储的小型评论系统。该系统部署简单，只需简单添加一个 js 脚本及一个 DOM 节点即可将其融入已有网页。

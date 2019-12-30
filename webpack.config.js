@@ -70,7 +70,8 @@ module.exports = env => {
                         options: {
                             limit: 8192,
                             outputPath: '/img/',
-                            publicPath: '/img/'
+                            publicPath: '/img/',
+                            esModule: false
                         }
                     }
                 }

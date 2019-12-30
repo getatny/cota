@@ -28,7 +28,7 @@ app.use(json({ pretty: false, param: 'pretty' }))
 
 app.use(responseHandler())
 app.use(authErrorHandler)
-app.use(koajwt({ secret: config.jwtSecret }).unless({ path: [/\/admin\/login/, /\/rest/] }))
+app.use(koajwt({ secret: config.jwtSecret }).unless({ path: [/\/admin\/login/, /\/rest/, /\/imgs/] }))
 app.use(publicApi.middleware())
 app.use(adminApi.middleware())
 
