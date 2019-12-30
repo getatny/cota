@@ -10,6 +10,7 @@
     "@koa/cors": "2",
     "antd": "^3.26.4",
     "bcrypt": "^3.0.7",
+    "js-md5": "^0.7.3",
     "koa": "^2.11.0",
     "koa-better-router": "^2.1.1",
     "koa-bodyparser": "^4.2.1",
@@ -23,12 +24,24 @@
     "sqlite3": "^4.1.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.7.7",
+    "@babel/plugin-proposal-class-properties": "^7.7.4",
+    "@babel/preset-env": "^7.7.7",
+    "babel-loader": "^8.0.6",
+    "css-loader": "^3.4.0",
+    "file-loader": "^5.0.2",
     "less": "^3.10.3",
-    "uglify-es": "^3.3.9"
+    "less-loader": "^5.0.0",
+    "postcss-loader": "^3.0.0",
+    "style-loader": "^1.1.2",
+    "terser-webpack-plugin": "^2.3.1",
+    "url-loader": "^3.0.0",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
   },
   "scripts": {
     "start": "node src/index.js",
-    "export": "uglifyjs src/static/cota.js -c -m -o dist/cota.min.js && lessc src/static/cota.less dist/cota.min.css",
+    "export": "webpack --mode=production",
     "migrate": "sequelize-cli db:migrate && sequelize-cli db:seed:all",
     "yarn-install": "yarn install && cd src/admin && yarn install",
     "npm-install": "npm install && cd src/admin && npm install"

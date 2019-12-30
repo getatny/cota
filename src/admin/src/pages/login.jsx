@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Icon, Input, Checkbox, Button, Divider, message } from 'antd';
+import { Form, Icon, Input, Checkbox, Button, message } from 'antd';
 import { useDispatch } from "react-redux";
 import { login as loginEvent } from '../store/actions'
 import http from '../components/utils'

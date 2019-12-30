@@ -1,222 +1,224 @@
-(function(d) {
-    const cota = d.getElementById('cota')
-    if (!cota) { // if this page doesn't contain any element id called 'cota', below code will never run.
-        return
+const md5 = require('js-md5')
+const dom = require('./plugin/dom')
+const emoticonImg = require('./imgs/emoticon.png').default
+const profileImg = require('./imgs/profile.png').default
+
+const http = { // a simple http query util
+    get: (url) => {
+        return fetch(url)
+    },
+    post: (url, data) => {
+        return fetch(url, {
+            method: 'post',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+    },
+    delete: (url, data) => {
+        return fetch(url, {
+            method: 'delete',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+    }
+}
+
+class CotaBase {
+    constructor(options) {
+        this.init(options)
     }
 
-    const gravatarMirror = 'https://dn-qiniu-avatar.qbox.me/avatar'
-    const serverPath = getServerPathByJSLink()
+    d = window.document
+    cota = this.d.getElementById('cota')
+    gravatarMirror = 'https://dn-qiniu-avatar.qbox.me/avatar'
 
-    const http = { // a simple http query util
-        get: (url) => {
-            return fetch(url)
-        },
-        post: (url, data) => {
-            return fetch(url, {
-                method: 'post',
-                headers: {
-                    'content-type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-        },
-        delete: (url, data) => {
-            return fetch(url, {
-                method: 'delete',
-                headers: {
-                    'content-type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
+    commentPage = 1 // current comment page number
+    commentPageSize = 10 // how many comments will be shown per page
+    commentTo = null
+
+    emojiSelectBoxStatuts = false
+    userInfoBoxStatuts = false
+
+    init = (options) => {
+        this.cota = options.el || this.cota
+        
+        if (!this.cota) { // if this page doesn't contain any element id called 'cota', below code will never run.
+            return
+        } else {
+            this.gravatarMirror = options.avatarUrl || this.gravatarMirror
+            this.commentPageSize = options.pageSize || this.commentPageSize
+            this.emojiList = this.getEmojiFromServer()
+            this.serverPath = this.getServerPathByJSLink()
+
+            this.generateComment()
         }
     }
 
-    let commentPage = 1 // current comment page number
-    let commentPageSize = 10 // how many comments will be shown per page
+    generateComment = () => {
+        console.log(profileImg)
+        // comment-box el
+        this.commentBox = dom.create({
+            type: 'div',
+            className: 'comment-box',
+            innerHtml: '<textarea class="comment-input"></textarea><div id="comment-btns"><div class="clear"></div></div>'
+        })
+        this.cota.prepend(this.commentBox)
+        // user infomation button
+        const userInfoButton = dom.createATag(this.showPopoverBox, 'user-info-button', `<img src=${profileImg} alt="profile" />`)
 
-    importCss()
+        // emoji button el
+        this.emojiButton = dom.createATag(this.showPopoverBox, 'emoji', `<img src=${emoticonImg} alt="emoticon" />`)
 
-    let commentTo = null // null: to this post; object: to this comment
+        // submit button el
+        const submitButton = dom.createATag(this.getCommentAndSubmit, 'submit', 'Submit')
 
-    // comment-box el
-    const commentBox = d.createElement('div')
-    commentBox.classList.add('comment-box')
-    commentBox.innerHTML = '<textarea class="comment-input"></textarea><div id="comment-btns"><div class="clear"></div></div>'
-    cota.prepend(commentBox)
-    // user infomation button
-    const userInfoButton = d.createElement('a')
-    userInfoButton.classList.add('user-info-button')
-    userInfoButton.innerHTML = `<img src="${serverPath}/imgs/profile.png" alt="profile" />`
-    userInfoButton.addEventListener('click', showPopoverBox)
-    // emoji button el
-    const emojiButton = d.createElement('a')
-    emojiButton.classList.add('emoji')
-    emojiButton.innerHTML = `<img src="${serverPath}/imgs/emoticon.png" alt="emoticon" />`
-    emojiButton.addEventListener('click', showPopoverBox)
-    // submit button el
-    const submitButton = d.createElement('a')
-    submitButton.classList.add('submit')
-    submitButton.innerText = 'Submit'
-    submitButton.addEventListener('click', getCommentAndSubmit)
-    // cancel reply button el
-    const cancelReplyButton = d.createElement('a')
-    cancelReplyButton.classList.add('cancel-reply-button')
-    cancelReplyButton.innerText = 'Cancel'
-    cancelReplyButton.addEventListener('click', cancelReply)
-    cancelReplyButton.style.display = 'none' // for default situation, this button will be hide
-    // commnet list el
-    const commentListEl = d.createElement('ul')
-    commentListEl.setAttribute('id', 'comment-list')
-    // emoji box
-    let emojiSelectBoxStatuts = false
-    const emojiSelectBox = d.createElement('div')
-    emojiSelectBox.setAttribute('id', 'emoji-select-box')
-    emojiSelectBox.innerHTML = '<div class="box-arrow"></div>'
-    const emojiSelectBoxContent = d.createElement('div')
-    emojiSelectBoxContent.classList.add('box-content')
-    emojiSelectBox.prepend(emojiSelectBoxContent)
-    // user infomation box
-    let userInfoBoxStatuts = false
-    const userInfoBox = d.createElement('div')
-    userInfoBox.setAttribute('id', 'user-info-box')
-    userInfoBox.innerHTML = '<div class="box-arrow"></div>'
-    const userInfoBoxContent = d.createElement('div')
-    userInfoBoxContent.classList.add('box-content')
-    userInfoBox.prepend(userInfoBoxContent)
-    d.documentElement.addEventListener('click', hidePopoverBox)
-    // inject element
-    d.getElementById('comment-btns').prepend(submitButton)
-    d.getElementById('comment-btns').prepend(cancelReplyButton)
-    d.getElementById('comment-btns').prepend(emojiButton)
-    d.getElementById('comment-btns').prepend(userInfoButton)
-    cota.append(commentListEl)
-    cota.append(emojiSelectBox)
-    cota.append(userInfoBox)
+        // cancel reply button el
+        this.cancelReplyButton = dom.createATag(this.cancelReply, 'cancel-reply-button', 'Cancel')
+        this.cancelReplyButton.style.display = 'none' // for default situation, this button will be hide
 
-    renderCommentList()
+        // commnet list el
+        this.commentListEl = dom.create({ type: 'ul', id: 'comment-list' })
 
-    let emojiList = getEmojiFromServer()
-    emojiList.forEach(item => {
-        emojiSelectBoxContent.append(createEmojiEl(item))
-    })
+        // emoji box
+        this.emojiSelectBox = dom.create({
+            type: 'div',
+            id: 'emoji-select-box',
+            innerHtml: '<div class="box-arrow"></div>'
+        })
+        const emojiSelectBoxContent = dom.create({ type: 'div', className: 'box-content' })
+        this.emojiSelectBox.prepend(emojiSelectBoxContent)
 
-    // import necessary css style
-    function importCss() {
-        let ifCssAlreadyLoad = false
-        Array.from(document.getElementsByTagName('link')).forEach(item => item.href.indexOf('cota.min.css') > -1 ? ifCssAlreadyLoad = true : null)
+        // user infomation box
+        this.userInfoBox = dom.create({
+            type: 'div',
+            id: 'user-info-box',
+            innerHtml: '<div class="box-arrow"></div>'
+        })
+        const userInfoBoxContent = dom.create({ type: 'div', className: 'box-content' })
+        this.userInfoBox.prepend(userInfoBoxContent)
 
-        if (!ifCssAlreadyLoad) {
-            const styleLink = d.createElement('link')
-            styleLink.rel = 'stylesheet'
-            styleLink.type = 'text/css'
-            styleLink.href = `${serverPath}/cota.min.css`
-            d.head.append(styleLink)
-            console.log('load necessary css of Cota')
-        }
+        this.d.documentElement.addEventListener('click', this.hidePopoverBox)
+
+        // inject element
+        dom.prepend(this.d.getElementById('comment-btns'), [submitButton, this.cancelReplyButton, this.emojiButton, userInfoButton])
+        dom.append(this.cota, [this.commentListEl, this.emojiSelectBox, this.userInfoBox])
+
+        this.renderCommentList()
+
+        dom.append(emojiSelectBoxContent, this.emojiList)
     }
 
-    // render main comment box
-    function switchCommentBoxPlace(el) {
-        el.prepend(commentBox)
-    }
-
-    function cancelReply() {
-        // hide child comment box
-        d.getElementsByClassName('comment-box')[0].remove()
-
-        // show main comment box
-        switchCommentBoxPlace(cota)
-        cancelReplyButton.style.display = 'none'
-        commentTo = null
-    }
-
-    // render comment lsit
-    function renderCommentList() {
-        getCommentFromServer().then(res => {
+    renderCommentList = () => {
+        this.getCommentFromServer().then(res => {
             const commentList = res.comments
 
             // render main comment
             commentList.mainComments.forEach(item => {
-                const commentListItem = createCommentItem(item)
-                commentListEl.append(commentListItem)
+                const commentListItem = this.createCommentItem(item)
+                this.commentListEl.append(commentListItem)
             })
             commentList.childComments.forEach(item => {
-                const commentListItem = createCommentItem(item, true)
-                d.querySelector(`#comment-list-item-${item.parentId} .child`).append(commentListItem)
+                const commentListItem = this.createCommentItem(item, true)
+                this.d.querySelector(`#comment-list-item-${item.parentId} .child`).append(commentListItem)
             })
 
-            if (res.count > commentPageSize) {
+            if (res.count > this.commentPageSize) {
                 // load more comments button
-                const loadMoreCommentsButton = d.createElement('div')
-                loadMoreCommentsButton.setAttribute('id', 'load-more')
-                loadMoreCommentsButton.innerText = 'Load More'
-                loadMoreCommentsButton.addEventListener('click', loadMoreComments)
-                cota.append(loadMoreCommentsButton)
+                const loadMoreCommentsButton = dom.create({
+                    type: 'div',
+                    id: 'load-more',
+                    innerHtml: 'Load More'
+                }, {
+                    event: 'click',
+                    fn: this.loadMoreComments
+                })
+                this.cota.append(loadMoreCommentsButton)
             }
         })
     }
 
-    function createCommentItem(item) {
-        const commentListItem = d.createElement('li')
-        commentListItem.classList.add('comment-list-item')
-        commentListItem.setAttribute('id', 'comment-list-item-' + item.id)
+    switchCommentBoxPlace = (el) => {
+        el.prepend(this.commentBox)
+    }
+
+    replyCommnet = (e) => {
+        // hide main comment box
+        this.d.getElementsByClassName('comment-box')[0].remove()
+
+        // show commnet box below the comment which user wanna reply
+        this.switchCommentBoxPlace(e.target.parentElement.nextElementSibling.nextElementSibling)
+        this.cancelReplyButton.style.display = 'block'
+        this.commentTo = e.target.parentElement.parentElement.parentElement
+    }
+
+    cancelReply = () => {
+        // hide child comment box
+        this.d.getElementsByClassName('comment-box')[0].remove()
+
+        // show main comment box
+        this.switchCommentBoxPlace(this.cota)
+        this.cancelReplyButton.style.display = 'none'
+        this.commentTo = null
+    }
+
+    createCommentItem = (item) => {
+        const commentListItem = dom.create({
+            type: 'li',
+            className: 'comment-list-item',
+            id: `comment-list-item-${item.id}`,
+            innerHtml: `<div class="avatar"><img src="${this.gravatarMirror}/${md5(item.email)}" alt="${item.nickname}" /></div><ul class="child"></ul>`
+        })
         commentListItem.setAttribute('data-id', item.id)
         commentListItem.setAttribute('data-rootid', item.rootId ? item.rootId : item.id)
-        commentListItem.innerHTML = `<div class="avatar"><img src="${gravatarMirror}/${md5(item.email)}" alt="${item.nickname}" /></div><ul class="child"></ul>`
+
         // comment detail el
-        const commentDetail = d.createElement('div')
-        commentDetail.classList.add('comment-detail')
-        commentDetail.addEventListener('mouseenter', function(e) {
-            e.stopPropagation()
-            e.target.children[0].children[0].style.opacity = '1'
+        const commentDetail = dom.create({
+            type: 'div',
+            className: 'comment-detail',
+            innerHtml: `<div class="comment-content">${item.comment}</div><div class="comment-box-${item.id}"></div>`
+        }, {
+            event: 'mouseenter',
+            fn: (e) => {
+                e.stopPropagation()
+                e.target.children[0].children[0].style.opacity = '1'
+            }
         })
         commentDetail.addEventListener('mouseleave', function(e) {
             e.target.children[0].children[0].style.opacity = '0'
         })
+
         // comment info el
-        const commentInfo = d.createElement('div')
-        commentInfo.classList.add('comment-info')
-        if (item.website) {
-            commentInfo.innerHTML = `<a class="nickname" href="${item.website}">${item.nickname}</a><div class="clear"></div>`
-        } else {
-            commentInfo.innerHTML = `<span class="nickname">${item.nickname}</span><div class="clear"></div>`
-        }
-        const reply = d.createElement('a')
-        reply.classList.add('reply-comment')
-        reply.innerText = 'Reply'
-        reply.addEventListener('click', replyCommnet)
-        commentDetail.innerHTML = `<div class="comment-content">${item.comment}</div><div class="comment-box-${item.id}"></div>`
+        const commentInfo = dom.create({
+            type: 'div',
+            className: 'comment-info',
+            innerHtml: item.website ? `<a class="nickname" href="${item.website}">${item.nickname}</a><div class="clear"></div>` : `<span class="nickname">${item.nickname}</span><div class="clear"></div>`
+        })
+
+        const reply = dom.createATag(this.replyCommnet, 'reply-comment', 'Reply')
+
         commentInfo.prepend(reply)
         commentDetail.prepend(commentInfo)
         commentListItem.prepend(commentDetail)
         return commentListItem
     }
 
-    // when Reply button clicked
-    function replyCommnet(e) {
-        // hide main comment box
-        d.getElementsByClassName('comment-box')[0].remove()
-
-        // show commnet box below the comment which user wanna reply
-        switchCommentBoxPlace(e.target.parentElement.nextElementSibling.nextElementSibling)
-        cancelReplyButton.style.display = 'block'
-        commentTo = e.target.parentElement.parentElement.parentElement
-    }
-
-    // submit comment when user click submit button
-    function getCommentAndSubmit(e) {
+    getCommentAndSubmit = (e) => {
         const value = e.target.parentElement.previousElementSibling.value
         
         if (value !== '') {
-            http.post(`${serverPath}/rest/comment/create`, {
-                key: md5(d.location.pathname),
+            http.post(`${this.serverPath}/rest/comment/create`, {
+                key: md5(this.d.location.pathname),
                 commentContent: value,
                 email: 'wangmaozhu@foxmail.com',
                 nickname: 'Matthew',
-                title: d.title,
-                url: d.location.href,
-                parentId: commentTo ? parseInt(commentTo.dataset.id) : 0,
-                rootId: commentTo ? parseInt(commentTo.dataset.rootid) : 0
+                title: this.d.title,
+                url: this.d.location.href,
+                parentId: this.commentTo ? parseInt(this.commentTo.dataset.id) : 0,
+                rootId: this.commentTo ? parseInt(this.commentTo.dataset.rootid) : 0
             }).then(res => res.json()).then(res => {
                 const commentListItem = createCommentItem({
                     id: res.response.id,
@@ -230,11 +232,11 @@
                 })
 
                 if (res.success) {
-                    notify('Submit comment successfully!', 'success')
-                    if (commentTo === null) {
-                        commentListEl.prepend(commentListItem)
+                    this.notify('Submit comment successfully!', 'success')
+                    if (this.commentTo === null) {
+                        this.commentListEl.prepend(commentListItem)
                     } else {
-                        commentTo.children[2].append(commentListItem)
+                        this.commentTo.children[2].append(commentListItem)
                     }
                     
                     if (e.target.previousElementSibling.style.display === 'block') {
@@ -242,57 +244,57 @@
                     }
                     e.target.parentElement.previousElementSibling.value = ''
                 } else {
-                    notify('Submit comment failed!', 'failed')
+                    this.notify('Submit comment failed!', 'failed')
                 }
-            }).catch(() => notify('Submit comment failed!', 'failed'))
+            }).catch(() => this.notify('Submit comment failed!', 'failed'))
         } else {
-            notify('Comment cannot be empty!', 'failed')
+            this.notify('Comment cannot be empty!', 'failed')
         }
     }
 
-    function showPopoverBox(e) {
+    showPopoverBox = (e) => {
         let target = e.target
         let actualTarget = null
 
         if (target.className === 'emoji' || target.alt === 'emoticon') {
-            actualTarget = emojiSelectBox
-            emojiSelectBoxStatuts = true
+            actualTarget = this.emojiSelectBox
+            this.emojiSelectBoxStatuts = true
         } else if (target.className === 'user-info-button' || target.alt === 'profile') {
-            actualTarget = userInfoBox
-            userInfoBoxStatuts = true
+            actualTarget = this.userInfoBox
+            this.userInfoBoxStatuts = true
         }
 
         target.alt ? target = target.parentElement : null
-        const position = getElementPagePosition(target)
+        const position = this.getElementPagePosition(target)
         const left = (position.x + ((target.offsetWidth) / 2) - 44)
 
-        actualTarget.style.cssText = `top: ${position.y + emojiButton.offsetHeight + 9}px; left: ${left}px`
+        actualTarget.style.cssText = `top: ${position.y + this.emojiButton.offsetHeight + 9}px; left: ${left}px`
         actualTarget.className = 'show-box'
     }
 
-    function hidePopoverBox(e) {
-        if (emojiSelectBoxStatuts && e.target.closest('#emoji-select-box') === null && e.target.className !== 'emoji' && e.target.alt !== 'emoticon') {
-            emojiSelectBox.className = 'hide-box'
+    hidePopoverBox = (e) => {
+        if (this.emojiSelectBoxStatuts && e.target.closest('#emoji-select-box') === null && e.target.className !== 'emoji' && e.target.alt !== 'emoticon') {
+            this.emojiSelectBox.className = 'hide-box'
         } 
-        if (userInfoBoxStatuts && e.target.closest('#user-info-box') === null && e.target.className !== 'user-info-button' && e.target.alt !== 'profile') {
-            userInfoBox.className = 'hide-box'
+        if (this.userInfoBoxStatuts && e.target.closest('#user-info-box') === null && e.target.className !== 'user-info-button' && e.target.alt !== 'profile') {
+            this.userInfoBox.className = 'hide-box'
         }
     }
 
-    function createEmojiEl(emoji) {
-        const tEmoji = d.createElement('a')
+    createEmojiEl = (emoji) => {
+        const tEmoji = this.d.createElement('a')
         tEmoji.innerText = emoji
         tEmoji.addEventListener('click', insertEmojiToTextarea)
         return tEmoji
     }
 
-    function insertEmojiToTextarea(e) {
+    insertEmojiToTextarea = (e) => {
         const content = e.target.innerText
-        const inputBox = commentBox.children[0]
+        const inputBox = this.commentBox.children[0]
         inputBox.value = inputBox.value + content
     }
 
-    function getElementPagePosition(element){
+    getElementPagePosition = (element) => {
         let actualLeft = element.offsetLeft;
         let current = element.offsetParent;
         while (current !== null) {
@@ -309,18 +311,18 @@
     }
 
     // custom notification component
-    function notify(msg, type = 'info', delay = 3000) {
+    notify = (msg, type = 'info', delay = 3000) => {
         let notification = null
-        const existNotification = d.getElementById('notification')
+        const existNotification = this.d.getElementById('notification')
         if (!existNotification) {
-            const noti = d.createElement('div')
+            const noti = this.d.createElement('div')
             noti.setAttribute('id', 'notification')
             noti.classList.add('show')
-            noti.innerHTML = `<div class="icon"><img src="${serverPath}/imgs/${type}.png" alt="${type}" /></div><div class="content">${msg}</div>`
+            noti.innerHTML = `<div class="icon"><img src="${this.serverPath}/imgs/${type}.png" alt="${type}" /></div><div class="content">${msg}</div>`
             notification = noti
-            cota.append(noti)
+            this.cota.append(noti)
         } else {
-            existNotification.children[0].children[0].src = `${serverPath}/imgs/${type}.png`
+            existNotification.children[0].children[0].src = `${this.serverPath}/imgs/${type}.png`
             existNotification.children[0].children[0].alt = type
             existNotification.children[1].innerText = msg
             existNotification.className = 'show'
@@ -332,9 +334,8 @@
         }, delay)
     }
 
-    // fetch comment list from server
-    function getCommentFromServer() {
-        return http.get(`${serverPath}/rest/comments/${md5(d.location.pathname)}/${commentPage}/${commentPageSize}`).then(res => res.json()).then(res => {
+    getCommentFromServer = () => {
+        return http.get(`${this.serverPath}/rest/comments/${md5(this.d.location.pathname)}/${this.commentPage}/${this.commentPageSize}`).then(res => res.json()).then(res => {
             if (res.success) {
                 return {
                     comments: res.response.comments,
@@ -344,20 +345,25 @@
         })
     }
 
-    function loadMoreComments(e) {
+    loadMoreComments = (e) => {
         
     }
 
-    function getEmojiFromServer() {
+    getEmojiFromServer = () => {
         return ['😀', '😃', '😄']
     }
 
-    function getServerPathByJSLink() {
+    getServerPathByJSLink = () => {
         const schema = Array.from(document.scripts).find(item => item.src.indexOf('cota.min.js') > -1).src.match(/^(\S*):\/\//)[1]
         const server = Array.from(document.scripts).find(item => item.src.indexOf('cota.min.js') > -1).src.match(/[https|http]:\/\/(\S*)\//)[1]
         return `${schema}://${server}`
     }
+}
 
-    // ========================================================================================================== md5
-    function md5(d){result = M(V(Y(X(d),8*d.length)));return result.toLowerCase()};function M(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function X(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function V(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function Y(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
-})(document)
+function Cota(options = {}) {
+    return new CotaBase(options)
+}
+
+window.Cota = Cota
+module.exports = Cota
+module.exports.default = Cota
