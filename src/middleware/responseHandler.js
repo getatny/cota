@@ -1,7 +1,7 @@
 const sendHandle = () => {
     // 处理请求成功方法
     const render = ctx => {
-        return (data, msg = '请求成功') => {
+        return (data = null, msg = '请求成功') => {
             ctx.set('Content-Type', 'application/json')
             ctx.body = {
                 success: true,

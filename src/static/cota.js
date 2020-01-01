@@ -18,33 +18,85 @@ const http = { // a simple http query util
             },
             body: JSON.stringify(data)
         })
-    },
-    delete: (url, data) => {
-        return fetch(url, {
-            method: 'delete',
-            headers: {
-                'content-type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
     }
 }
 
-class CotaBase {
-    constructor(options) {
-        this.init(options)
+class I18n {
+
+    constructor(lang) {
+        this.lang = lang
     }
 
-    d = window.document
-    cota = this.d.getElementById('cota')
-    gravatarMirror = 'https://dn-qiniu-avatar.qbox.me/avatar'
+    trans = {
+        en: {
+            button: {
+                submit: 'Submit',
+                cancelReply: 'Cancel',
+                reply: 'Reply',
+                login: 'Login',
+                logout: 'Logout'
+            },
+            input: {
+                email: 'E-Mail',
+                nickname: 'Nickname',
+                website: 'Website: http://'
+            },
+            notTrusted: 'Reviewing'
+        },
 
-    commentPage = 1 // current comment page number
-    commentPageSize = 10 // how many comments will be shown per page
-    commentTo = null
+        'zh-CN': {
+            button: {
+                submit: '提交',
+                cancelReply: '取消',
+                reply: '回复',
+                login: '登记',
+                logout: '注销'
+            },
+            input: {
+                email: '电子邮箱',
+                nickname: '昵称',
+                website: '网址: http://'
+            },
+            notTrusted: '待审核'
+        }
+    }
 
-    emojiSelectBoxStatuts = false
-    userInfoBoxStatuts = false
+    t(key) {
+        const keys = key.split('.')
+        let string = this.trans[this.lang]
+
+        for (let i = 0; i < keys.length; i++) {
+            string = string[keys[i]]
+        }
+
+        return string ? string : key
+    }
+
+    setLang(lang) {
+        this.lang = lang
+    }
+}
+
+
+
+class CotaBase {
+    constructor(options) {
+        this.d = window.document
+        this.cota = this.d.getElementById('cota')
+        this.gravatarMirror = 'https://dn-qiniu-avatar.qbox.me/avatar'
+        this.i18n = new I18n('en')
+
+        this.commentPage = 1 // current comment page number
+        this.commentPageSize = 10 // how many comments will be shown per page
+        this.commentTo = null
+
+        this.emojiSelectBoxStatus = false
+        this.userInfoBoxStatus = false
+
+        this.notificationTimer = null
+        this.userInfo = JSON.parse(window.localStorage.getItem('cota_user')) || {}
+        this.init(options)
+    }
 
     init = (options) => {
         this.cota = this.d.getElementById(options.el)|| this.cota
@@ -54,10 +106,11 @@ class CotaBase {
         } else {
             this.gravatarMirror = options.avatarUrl || this.gravatarMirror
             this.commentPageSize = options.pageSize || this.commentPageSize
+            if (options.lang) this.i18n.setLang(options.lang)
             this.emojiList = this.getEmojiFromServer()
             this.serverPath = this.getServerPathByJSLink()
 
-            this.importCSS('https://fonts.font.im/css?family=Open+Sans')
+            this.importCSS('https://fonts.font.im/css?family=Open+Sans') // 加载谷歌字体
             this.generateComment()
         }
     }
@@ -69,7 +122,7 @@ class CotaBase {
             className: 'comment-box',
             innerHtml: '<textarea class="comment-input"></textarea><div id="comment-btns"><div class="clear"></div></div>'
         })
-        this.cota.prepend(this.commentBox)
+
         // user infomation button
         const userInfoButton = dom.createATag(this.showPopoverBox, 'user-info-button', `<img src=${profileImg} alt="profile" />`)
 
@@ -77,10 +130,10 @@ class CotaBase {
         this.emojiButton = dom.createATag(this.showPopoverBox, 'emoji', `<img src=${emoticonImg} alt="emoticon" />`)
 
         // submit button el
-        const submitButton = dom.createATag(this.getCommentAndSubmit, 'submit', 'Submit')
+        const submitButton = dom.createATag(this.getCommentAndSubmit, 'submit', this.i18n.t('button.submit'))
 
         // cancel reply button el
-        this.cancelReplyButton = dom.createATag(this.cancelReply, 'cancel-reply-button', 'Cancel')
+        this.cancelReplyButton = dom.createATag(this.cancelReply, 'cancel-reply-button', this.i18n.t('button.cancelReply'))
         this.cancelReplyButton.style.display = 'none' // for default situation, this button will be hide
 
         // commnet list el
@@ -101,18 +154,75 @@ class CotaBase {
             id: 'user-info-box',
             innerHtml: '<div class="box-arrow"></div>'
         })
-        const userInfoBoxContent = dom.create({ type: 'div', className: 'box-content' })
-        this.userInfoBox.prepend(userInfoBoxContent)
+        this.userInfoBoxContent = dom.create({ 
+            type: 'div', 
+            className: 'box-content'
+        })
+        this.userInfoBox.prepend(this.userInfoBoxContent)
 
-        this.d.documentElement.addEventListener('click', this.hidePopoverBox)
+        this.d.documentElement.addEventListener('click', this.hidePopoverBox) // add a global listener to close popover box
 
         // inject element
-        dom.prepend(this.d.getElementById('comment-btns'), [submitButton, this.cancelReplyButton, userInfoButton, this.emojiButton])
-        dom.append(this.cota, [this.commentListEl, this.emojiSelectBox, this.userInfoBox])
-
-        this.renderCommentList()
-
+        dom.append(this.cota, [this.commentBox, this.commentListEl, this.emojiSelectBox, this.userInfoBox])
+        dom.prepend(this.commentBox.querySelector('#comment-btns'), [submitButton, this.cancelReplyButton, this.emojiButton, userInfoButton])
+        // append emoji list to emoji select popover box
         dom.append(emojiSelectBoxContent, this.emojiList, this.createEmojiEl)
+
+        this.userInfo.email ? this.renderUserInfoDetailBox() : this.renderUserLoginBox()
+        this.renderCommentList()
+    }
+
+    renderUserLoginBox = () => {
+        if (this.loginBox) {
+            this.userInfoBoxContent.append(this.loginBox)
+        } else {
+            this.loginBox = dom.create({
+                type: 'div',
+                className: 'user-info',
+                innerHtml: `<div class="user-avatar"><img src="${this.gravatarMirror}/${md5('')}" /></div><div class="user-login"><form id="login-form"><input name="email" placeholder="${this.i18n.t('input.email')}" /><input name="nickname" placeholder="${this.i18n.t('input.nickname')}" /><input name="website" placeholder="${this.i18n.t('input.website')}" /></form></div>`
+            })
+
+            const loginButton = dom.createATag(e => {
+                e.stopPropagation()
+                const loginForm = this.d.forms['login-form']
+                const email = loginForm.elements.email.value
+                const nickname = loginForm.elements.nickname.value
+                const website = loginForm.elements.website.value
+
+                if (email !== '' && nickname !== '') {
+                    this.userInfo = {
+                        email,
+                        nickname,
+                        website
+                    }
+                    window.localStorage.setItem('cota_user', JSON.stringify(this.userInfo))
+                    this.loginBox.remove()
+                    this.renderUserInfoDetailBox()
+                } else {
+                    this.notify('Email or Nickname cannot be empty!', 'failed')
+                }
+            }, 'login-button', this.i18n.t('button.login'))
+
+            dom.append(this.userInfoBoxContent, [this.loginBox, loginButton])
+        }
+    }
+
+    renderUserInfoDetailBox = () => {
+        const userInfo = this.userInfo
+        const userInfoDetailBox = dom.create({
+            type: 'div',
+            className: 'user-info logout',
+            innerHtml: `<div class="user-avatar" title="${this.i18n.t('button.logout')}"><img src="${this.gravatarMirror}/${md5(userInfo.email)}" /></div><div class="info-detail"><div class="email">${userInfo.email}</div><div class="nickname">${userInfo.nickname}</div></div>`
+        })
+
+        userInfoDetailBox.querySelector('.user-avatar').addEventListener('click', e => {
+            e.stopPropagation()
+            this.userInfo = {}
+            window.localStorage.removeItem('cota_user')
+            userInfoDetailBox.remove()
+            this.renderUserLoginBox()
+        })
+        this.userInfoBoxContent.append(userInfoDetailBox)
     }
 
     importCSS = (path) => {
@@ -127,18 +237,20 @@ class CotaBase {
         this.getCommentFromServer().then(res => {
             const commentList = res.comments
 
-            // render main comment
+            // render main comments
             commentList.mainComments.forEach(item => {
                 const commentListItem = this.createCommentItem(item)
                 this.commentListEl.append(commentListItem)
             })
+
+            // render child comments
             commentList.childComments.forEach(item => {
                 const commentListItem = this.createCommentItem(item, true)
-                this.d.querySelector(`#comment-list-item-${item.parentId} .child`).append(commentListItem)
+                this.commentListEl.querySelector(`#comment-list-item-${item.parentId} .child`).append(commentListItem)
             })
 
             if (res.count > this.commentPageSize) {
-                // load more comments button
+                // load more comments button when the number of all comments bigger than the size per page we set
                 const loadMoreCommentsButton = dom.create({
                     type: 'div',
                     id: 'load-more',
@@ -156,9 +268,9 @@ class CotaBase {
         el.prepend(this.commentBox)
     }
 
-    replyCommnet = (e) => {
+    replyComment = (e) => {
         // hide main comment box
-        this.d.getElementsByClassName('comment-box')[0].remove()
+        this.cota.querySelector('.comment-box').remove()
 
         // show commnet box below the comment which user wanna reply
         this.switchCommentBoxPlace(e.target.parentElement.nextElementSibling.nextElementSibling)
@@ -168,7 +280,7 @@ class CotaBase {
 
     cancelReply = () => {
         // hide child comment box
-        this.d.getElementsByClassName('comment-box')[0].remove()
+        this.commentListEl.querySelector('.comment-box').remove()
 
         // show main comment box
         this.switchCommentBoxPlace(this.cota)
@@ -207,10 +319,12 @@ class CotaBase {
         const commentInfo = dom.create({
             type: 'div',
             className: 'comment-info',
-            innerHtml: item.website ? `<a class="nickname" href="${item.website}">${item.nickname}</a><span class="comment-date">${commentDate}</span><div class="clear"></div>` : `<span class="nickname">${item.nickname}</span><span class="comment-date">${commentDate}</span><div class="clear"></div>`
+            innerHtml: item.website ?
+                `${!item.status ? '<span class="not-trust" title="' + this.i18n.t('notTrusted') + '"></span>' : null}<a class="nickname" href="${item.website}">${item.nickname}</a><span class="comment-date">${commentDate}</span><div class="clear"></div>`
+                : `${!item.status ? '<span class="not-trust" title="' + this.i18n.t('notTrusted') + '"></span>' : null}<span class="nickname">${item.nickname}</span><span class="comment-date">${commentDate}</span><div class="clear"></div>`
         })
 
-        const reply = dom.createATag(this.replyCommnet, 'reply-comment', 'Reply')
+        const reply = dom.createATag(this.replyComment, 'reply-comment', this.i18n.t('button.reply'))
 
         commentInfo.prepend(reply)
         commentDetail.prepend(commentInfo)
@@ -219,19 +333,33 @@ class CotaBase {
     }
 
     getCommentAndSubmit = (e) => {
+        if (!(this.userInfo && this.userInfo.email && this.userInfo.nickname)) {
+            e.stopPropagation()
+            this.notify('Please complete your personal information!', 'failed')
+            this.commentBox.querySelector('.user-info-button').click()
+            return
+        }
+
         const value = e.target.parentElement.previousElementSibling.value
         
-        if (value !== '') {
-            http.post(`${this.serverPath}/rest/comment/create`, {
-                key: md5(this.d.location.pathname),
-                commentContent: value,
-                email: 'wangmaozhu@foxmail.com',
-                nickname: 'Matthew',
-                title: this.d.title,
-                url: this.d.location.href,
-                parentId: this.commentTo ? parseInt(this.commentTo.dataset.id) : 0,
-                rootId: this.commentTo ? parseInt(this.commentTo.dataset.rootid) : 0
-            }).then(res => res.json()).then(res => {
+        if (value === '') { // comment value cannot be empty
+            this.notify('Comment cannot be empty!', 'failed')
+            return
+        }
+
+        http.post(`${this.serverPath}/rest/comment/create`, {
+            key: md5(this.d.location.pathname),
+            commentContent: value,
+            email: this.userInfo.email,
+            nickname: this.userInfo.nickname,
+            title: this.d.title,
+            url: this.d.location.href,
+            parentId: this.commentTo ? parseInt(this.commentTo.dataset.id) : 0,
+            rootId: this.commentTo ? parseInt(this.commentTo.dataset.rootid) : 0
+        }).then(res => res.json()).then(res => {
+            if (res.success) {
+                this.notify('Submit comment successfully!', 'success')
+
                 const commentListItem = this.createCommentItem({
                     id: res.response.id,
                     postId: res.response.postId,
@@ -244,25 +372,20 @@ class CotaBase {
                     createdAt: '刚刚'
                 })
 
-                if (res.success) {
-                    this.notify('Submit comment successfully!', 'success')
-                    if (this.commentTo === null) {
-                        this.commentListEl.prepend(commentListItem)
-                    } else {
-                        this.commentTo.children[2].append(commentListItem)
-                    }
-                    
-                    if (e.target.previousElementSibling.style.display === 'block') {
-                        e.target.previousElementSibling.click()
-                    }
-                    e.target.parentElement.previousElementSibling.value = ''
+                if (this.commentTo === null) {
+                    this.commentListEl.prepend(commentListItem)
                 } else {
-                    this.notify('Submit comment failed!', 'failed')
+                    this.commentTo.children[2].append(commentListItem)
                 }
-            }).catch(() => this.notify('Submit comment failed!', 'failed'))
-        } else {
-            this.notify('Comment cannot be empty!', 'failed')
-        }
+
+                if (e.target.previousElementSibling.style.display === 'block') {
+                    e.target.previousElementSibling.click()
+                }
+                e.target.parentElement.previousElementSibling.value = ''
+            } else {
+                this.notify('Submit comment failed!', 'failed')
+            }
+        }).catch(() => this.notify('Submit comment failed!', 'failed'))
     }
 
     showPopoverBox = (e) => {
@@ -271,25 +394,28 @@ class CotaBase {
 
         if (target.className === 'emoji' || target.alt === 'emoticon') {
             actualTarget = this.emojiSelectBox
-            this.emojiSelectBoxStatuts = true
+            this.emojiSelectBoxStatus = true
         } else if (target.className === 'user-info-button' || target.alt === 'profile') {
             actualTarget = this.userInfoBox
-            this.userInfoBoxStatuts = true
+            this.userInfoBoxStatus = true
         }
 
         target.alt ? target = target.parentElement : null
-        const position = this.getElementPagePosition(target)
-        const left = (position.x + ((target.offsetWidth) / 2) - 44)
+        const boxPosition = this.getElementPagePosition(this.commentBox)
+        const targetPosition = this.getElementPagePosition(target)
 
-        actualTarget.style.cssText = `top: ${position.y + this.emojiButton.offsetHeight + 9}px; left: ${left}px`
-        actualTarget.className = 'show-box'
+        if (actualTarget) {
+            actualTarget.style.cssText = `top: ${targetPosition.y + this.emojiButton.offsetHeight + 12}px; left: ${boxPosition.x}px`
+            actualTarget.children[1].style.left = `${(targetPosition.x + (target.offsetWidth / 2)) - boxPosition.x - 5}px`
+            actualTarget.className = 'show-box'
+        }
     }
 
     hidePopoverBox = (e) => {
-        if (this.emojiSelectBoxStatuts && e.target.closest('#emoji-select-box') === null && e.target.className !== 'emoji' && e.target.alt !== 'emoticon') {
+        if (this.emojiSelectBoxStatus && e.target.closest('#emoji-select-box') === null && e.target.className !== 'emoji' && e.target.alt !== 'emoticon') {
             this.emojiSelectBox.className = 'hide-box'
         } 
-        if (this.userInfoBoxStatuts && e.target.closest('#user-info-box') === null && e.target.className !== 'user-info-button' && e.target.alt !== 'profile') {
+        if (this.userInfoBoxStatus && e.target.closest('#user-info-box') === null && e.target.className !== 'user-info-button' && e.target.alt !== 'profile') {
             this.userInfoBox.className = 'hide-box'
         }
     }
@@ -322,6 +448,7 @@ class CotaBase {
 
     // custom notification component
     notify = (msg, type = 'info', delay = 3000) => {
+        if (this.notificationTimer !== null) return
         let notification = null
         const existNotification = this.d.getElementById('notification')
         if (!existNotification) {
@@ -334,20 +461,21 @@ class CotaBase {
             notification = noti
             this.cota.append(noti)
         } else {
-            existNotification.children[0].children[0].src = `${this.serverPath}/imgs/${type}.png`
+            existNotification.children[0].children[0].src = type === 'success' ? successImg : type === 'info' ? infoImg : failedImg
             existNotification.children[0].children[0].alt = type
             existNotification.children[1].innerText = msg
             existNotification.className = 'show'
             notification = existNotification
         }
 
-        setTimeout(() => {
+        this.notificationTimer = setTimeout(() => {
             notification.className = 'hide'
+            this.notificationTimer = null
         }, delay)
     }
 
     getCommentFromServer = () => {
-        return http.get(`${this.serverPath}/rest/comments/${md5(this.d.location.pathname)}/${this.commentPage}/${this.commentPageSize}`).then(res => res.json()).then(res => {
+        return http.get(`${this.serverPath}/rest/comments/${md5(this.d.location.pathname)}/${this.commentPage}/${this.commentPageSize}${this.userInfo.email ? '?email=' + this.userInfo.email : ''}`).then(res => res.json()).then(res => {
             if (res.success) {
                 return {
                     comments: res.response.comments,

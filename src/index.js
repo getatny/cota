@@ -20,15 +20,15 @@ app.use(serve('admin-public')) // load admin portal
 app.use(cors({
     origin: function(ctx) {
         let isWhiteList = null
-        config.whiteList.forEach(item => ctx.request.header.origin.indexOf(item) > -1 ? isWhiteList = ctx.request.header.origin : null)
+        config.api.whiteList.forEach(item => ctx.request.header.origin.indexOf(item) > -1 ? isWhiteList = ctx.request.header.origin : null)
         return isWhiteList
     }
 }))
 app.use(json({ pretty: false, param: 'pretty' }))
 
 app.use(responseHandler())
-app.use(authErrorHandler)
-app.use(koajwt({ secret: config.jwtSecret }).unless({ path: [/\/admin\/login/, /\/rest/, /\/imgs/] }))
+// app.use(authErrorHandler)
+// app.use(koajwt({ secret: config.api.jwtSecret }).unless({ path: [/\/admin\/login/, /\/rest/, /\/imgs/] }))
 app.use(publicApi.middleware())
 app.use(adminApi.middleware())
 

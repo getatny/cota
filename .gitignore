@@ -2,3 +2,5 @@ node_modules/
 yarn.lock
 db/cota.sqlite
 .idea
+dist/cota.min.js
+dist/cota.min.js.LICENSE

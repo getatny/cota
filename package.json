@@ -41,7 +41,7 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "export": "webpack --mode=production",
+    "export": "webpack --mode=development",
     "migrate": "sequelize-cli db:migrate && sequelize-cli db:seed:all",
     "yarn-install": "yarn install && cd src/admin && yarn install",
     "npm-install": "npm install && cd src/admin && npm install"

@@ -34,7 +34,7 @@ const utils = {
     },
 
     prepend: function(dom, nodes, fn = null) {
-        nodes.forEach(node => fn ? dom.append(fn(node)) : dom.append(node))
+        nodes.forEach(node => fn ? dom.prepend(fn(node)) : dom.prepend(node))
     }
 
 }

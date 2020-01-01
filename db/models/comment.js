@@ -23,6 +23,11 @@ module.exports = (sequelize, DataTypes) => {
         comment: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        status: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
         }
     }, {});
     comment.associate = function(models) {

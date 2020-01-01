@@ -15,18 +15,39 @@ Cota 是一个使用Javascript语言编写的，以 sqlite 作为数据存储的
 ```bash
 git clone git@github.com:getatny/cota.git
 cd cota
-yarn install
-yarn migrate
+yarn yarn-install # 安装server及admin所需依赖
+yarn export # 导出静态资源
+yarn migrate # 创建数据库，添加默认admin账号 cota-admin / cota-admin (请记得修改密码)
 yarn start
 ```
 
 ## 配置
 
-通过以上操作，你可以快速启动一个 cota 评论系统程序，但是为了系统的正常运行，你还需要根据需要修改配置文件：
+通过以上操作，你可以快速启动一个 cota 评论系统程序，但是为了系统的正常运行，你还需要根据需要根据你的需求修改一些配置文件：
+
+简单来说，配置文件分为两个部分：
+
+1. `src/config.json` 中用于设置server端表现的配置文件
+2. 在实例化 `Cota` 对象时传入的options
+
+### src/config.json
 
 打开 `src/config.js` 文件你可以看到几个配置项，每个配置项的作用有对应注释说明，其中 `whiteList` 指定了能够通过 cota 暴露的 api 访问评论资源的域名，一般来说需要设置两个，一个是 cota server 启动的域名，另一个是被注入 cota 评论系统的网页域名。
 
 `jwtSecret` 字段设置的字符串，将被作为 server 生成授权 token 时的密匙，根据自己的需要设置即可。
+
+`trustThreshhold` 字段用于自动审核评论，当一条评论产生的时候，默认（0）是需要手动审核之后才能在评论列表中显示的，将该字段设置为任何大于0的值即打开自动信任模式，用户的前N次（你设置的值）评论还是需要你手动审核，但当被审核通过的评论数量达到设置的值时，该用户将被加入可信名单，以后该用户所有的评论都将无审核直接显示在评论列表中！
+
+### new Cota(options)
+
+在实例化 `Cota` 对象的的时候，你可以传入一个对象改变其默认配置：（所有配置都不是必须的，如果你的注入节点id是cota的话）
+
+|字段|参数类型|作用|默认值|
+|:------:|:------:|:------:|:------:|
+|`el`|string|设置输入框注入节点(id)|cota|
+|`avatarUrl`|string|gravatar头像CDN|七牛CDN|
+|`pageSize`|number|每页评论数|10|
+|`lang`|string|显示语言|en|
 
 ## 自定义？
 

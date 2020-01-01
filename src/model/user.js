@@ -6,8 +6,8 @@ const model = {
     findUserById(userId) {
         return user.findOne({ where: { id: userId } })
     },
-    findUserByUsername(username) {
-        return user.findOne({ where: { username } })
+    findUserByEmail(email) {
+        return user.findOne({ where: { email } })
     },
     findUsers(page, pageSize) {
         return user.findAndCountAll({
@@ -15,6 +15,9 @@ const model = {
             offset: (page - 1) * pageSize,
             order: cotaDatabase.Sequelize.literal('createdAt ASC')
         })
+    },
+    createUser(email) {
+        return user.create({ email })
     }
 }
 
