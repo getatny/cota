@@ -10,16 +10,36 @@ Cota 是一个使用Javascript语言编写的，以 sqlite 作为数据存储的
 ## 快速开始
 
 首先，你需要通过一下命令克隆本项目，并安装 server 程序启动所需要的所有依赖、建立 sqlite 数据库及默认 admin 账号：
+
 > ps. 我使用 yarn 管理依赖包，如果你没有安装 yarn，请使用 npm 替换下列命令中所有的 yarn 关键字！
 
 ```bash
 git clone git@github.com:getatny/cota.git
 cd cota
 yarn yarn-install # 安装server及admin所需依赖
-yarn export # 导出静态资源
+yarn export:prod # 导出静态资源
 yarn migrate # 创建数据库，添加默认admin账号 cota-admin / cota-admin (请记得修改密码)
-yarn start
+yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进行反向代理提供公网访问
 ```
+
+这样 `Cota` server及静态资源就准备好了，后面还需要做最后一步操作，将评论框注入你需要评论服务的页面。
+
+要实现评论框注入，你需要准备一个容纳评论框的节点，并且该节点拥有唯一的id。（例如：`<div id="cota"></div>`）
+
+之后引入 `cota.min.js` 并实例化 `Cota` 对象，传入你准备好的容纳评论框的id即可：
+
+```html
+<script src="http://localhost:4444/cota.min.js"></script>
+<!-- 如果注入节点id为cota，则可省去el参数。具体参数配置请参考后面配置部分 -->
+<script>
+    new Cota({
+        el: 'cota',
+        lang: 'zh-CN'
+    });
+</script>
+```
+
+刷新页面，即可看到 cota 注入成功！
 
 ## 配置
 
@@ -27,10 +47,10 @@ yarn start
 
 简单来说，配置文件分为两个部分：
 
-1. `src/config.json` 中用于设置server端表现的配置文件
+1. `src/config.js` 中用于设置server端表现的配置文件
 2. 在实例化 `Cota` 对象时传入的options
 
-### src/config.json
+### src/config.js
 
 打开 `src/config.js` 文件你可以看到几个配置项，每个配置项的作用有对应注释说明，其中 `whiteList` 指定了能够通过 cota 暴露的 api 访问评论资源的域名，一般来说需要设置两个，一个是 cota server 启动的域名，另一个是被注入 cota 评论系统的网页域名。
 
@@ -48,6 +68,10 @@ yarn start
 |`avatarUrl`|string|gravatar头像CDN|七牛CDN|
 |`pageSize`|number|每页评论数|10|
 |`lang`|string|显示语言|en|
+
+## 管理后台
+
+在你成功部署 `Cota` 服务之后，可以直接访问 `http://localhost:4444` 访问cota提供的管理后台。默认的账号 / 密码为： cota-admin / cota-admin
 
 ## 自定义？
 

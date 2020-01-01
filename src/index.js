@@ -27,8 +27,8 @@ app.use(cors({
 app.use(json({ pretty: false, param: 'pretty' }))
 
 app.use(responseHandler())
-// app.use(authErrorHandler)
-// app.use(koajwt({ secret: config.api.jwtSecret }).unless({ path: [/\/admin\/login/, /\/rest/, /\/imgs/] }))
+app.use(authErrorHandler)
+app.use(koajwt({ secret: config.api.jwtSecret }).unless({ path: [/\/admin\/login/, /\/rest/, /\/imgs/] }))
 app.use(publicApi.middleware())
 app.use(adminApi.middleware())
 

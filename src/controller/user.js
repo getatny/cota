@@ -1,5 +1,5 @@
 const dbController = require('../model')
-const { errorResolver } = require('./utils')
+const { errorResolver } = require('./resolver')
 
 const controller = {
     getTrustUsers: async (ctx, next) => {
