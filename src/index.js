@@ -4,7 +4,7 @@ const json = require('koa-json')
 const logger = require('koa-logger')
 const publicApi = require('./router/public')
 const adminApi = require('./router/admin')
-const config = require('./config')
+const config = require('./utils/conf')
 const cors = require('@koa/cors')
 const bodyParser = require('koa-bodyparser')
 const koajwt = require('koa-jwt')
@@ -20,7 +20,7 @@ app.use(serve('admin-public')) // load admin portal
 app.use(cors({
     origin: function(ctx) {
         let isWhiteList = null
-        config.api.whiteList.forEach(item => ctx.request.header.origin.indexOf(item) > -1 ? isWhiteList = ctx.request.header.origin : null)
+        config.getConfig('api.whiteList').forEach(item => ctx.request.header.origin.indexOf(item) > -1 ? isWhiteList = ctx.request.header.origin : null)
         return isWhiteList
     }
 }))
@@ -28,10 +28,10 @@ app.use(json({ pretty: false, param: 'pretty' }))
 
 app.use(responseHandler())
 app.use(authErrorHandler)
-app.use(koajwt({ secret: config.api.jwtSecret }).unless({ path: [/\/admin\/login/, /\/rest/, /\/imgs/] }))
+app.use(koajwt({ secret: config.getConfig('api.jwtSecret') }).unless({ path: [/\/admin\/login/, /\/rest/, /\/imgs/] }))
 app.use(publicApi.middleware())
 app.use(adminApi.middleware())
 
-app.listen(config.port, () => {
-    console.info(`[Info] ${Date(Date.now()).toLocaleString()}: Cota service started on port: ${config.port}`)
+app.listen(config.getConfig('port'), () => {
+    console.info(`[Info] ${Date(Date.now()).toLocaleString()}: Cota service started on port: ${config.getConfig('port')}`)
 })

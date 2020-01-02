@@ -47,12 +47,12 @@ yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进
 
 简单来说，配置文件分为两个部分：
 
-1. `src/config.js` 中用于设置server端表现的配置文件
+1. `src/config.json` 中用于设置server端表现的配置文件
 2. 在实例化 `Cota` 对象时传入的options
 
-### src/config.js
+### src/config.json
 
-打开 `src/config.js` 文件你可以看到几个配置项，每个配置项的作用有对应注释说明，其中 `whiteList` 指定了能够通过 cota 暴露的 api 访问评论资源的域名，一般来说需要设置两个，一个是 cota server 启动的域名，另一个是被注入 cota 评论系统的网页域名。
+打开 `src/config.json` 文件你可以看到几个配置项，其中 `whiteList` 指定了能够通过 cota 暴露的 api 访问评论资源的域名，一般来说需要设置两个，一个是 cota server 启动的域名，另一个是被注入 cota 评论系统的网页域名。
 
 `jwtSecret` 字段设置的字符串，将被作为 server 生成授权 token 时的密匙，根据自己的需要设置即可。
 

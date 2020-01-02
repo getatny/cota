@@ -44,7 +44,7 @@
     "export:dev": "webpack --mode=development",
     "export:prod": "webpack --mode=production",
     "migrate": "sequelize-cli db:migrate && sequelize-cli db:seed:all",
-    "yarn-install": "yarn install && cd src/admin && yarn install",
-    "npm-install": "npm install && cd src/admin && npm install"
+    "i:yarn": "yarn install && cd src/admin && yarn install",
+    "i:npm": "npm install && cd src/admin && npm install"
   }
 }

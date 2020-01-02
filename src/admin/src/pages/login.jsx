@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Icon, Input, Checkbox, Button, message } from 'antd';
 import { useDispatch } from "react-redux";
 import { login as loginEvent } from '../store/actions'
-import http from '../components/utils'
+import http from '../utils/http'
 import Config from '../config'
 import '../styles/login.less'
 
@@ -28,8 +28,9 @@ const Login = (props) => {
                 login(values).then(res => {
                     if (values.remember) {
                         localStorage.setItem('cota_admin_user', JSON.stringify({
-                            id: res.id,
-                            username: res.username,
+                            id: res.user.id,
+                            username: res.user.username,
+                            nickname: res.user.nickname,
                             token: res.token
                         }))
                         localStorage.setItem('cota_admin_token_exp', new Date().getTime())

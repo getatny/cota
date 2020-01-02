@@ -1,6 +1,6 @@
 const dbController = require('../model')
 const { errorResolver } = require('./resolver')
-const config = require('../config')
+const config = require('../utils/conf')
 
 const controller = {
     createComment: async (ctx, next) => {
@@ -63,7 +63,7 @@ const controller = {
         await errorResolver(async () => {
             await dbController.updateCommentStatus(commentId)
             
-            if (config.admin.trustThreshhold !== 0) {
+            if (config.getConfig('admin.trustThreshhold') !== 0) {
                 const approvedCommentsCount = dbController.countComments({ email, status: 1 })
 
                 if (approvedCommentsCount === config.admin.trustThreshhold) {

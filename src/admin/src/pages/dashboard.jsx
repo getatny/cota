@@ -1,7 +1,10 @@
 import React from 'react'
+import LayoutComponent from '../components/layout'
 
 const Dashboard = () => {
-    return <div></div>
+    return <LayoutComponent>
+        123
+    </LayoutComponent>
 }
 
 export default Dashboard
