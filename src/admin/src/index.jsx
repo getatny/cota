@@ -1,12 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { HashRouter, Route, Switch, Redirect } from 'react-router-dom'
-import Login from './pages/login'
+import { HashRouter, Route, Redirect, Switch } from 'react-router-dom'
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import Store from './store'
 import { login } from "./store/actions"
 import Dashboard from './pages/dashboard'
+import Login from './pages/login'
+import Profile from './pages/profile'
 import * as serviceWorker from './serviceWorker'
+import './styles/index.less'
 
 const PrivateRoute = ({ component: Component, isLogin, ...rest }) => {
     return (
@@ -50,6 +52,7 @@ const App = () => {
         <HashRouter>
             <Switch>
                 <PrivateRoute exact path='/' component={Dashboard} isLogin={isLogin}/>
+                <PrivateRoute exact path='/profile' component={Profile} isLogin={isLogin}/>
                 <HideRoute exact path='/login' component={Login} isLogin={isLogin}/>
             </Switch>
         </HashRouter>

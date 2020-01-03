@@ -347,7 +347,7 @@ class CotaBase {
             return
         }
 
-        http.post(`${this.serverPath}/rest/comment/create`, {
+        http.post(`${this.serverPath}/rest/public/comment/create`, {
             key: md5(this.d.location.pathname),
             commentContent: value,
             email: this.userInfo.email,
@@ -475,7 +475,7 @@ class CotaBase {
     }
 
     getCommentFromServer = () => {
-        return http.get(`${this.serverPath}/rest/comments/${md5(this.d.location.pathname)}/${this.commentPage}/${this.commentPageSize}${this.userInfo.email ? '?email=' + this.userInfo.email : ''}`).then(res => res.json()).then(res => {
+        return http.get(`${this.serverPath}/rest/public/comments/${md5(this.d.location.pathname)}/${this.commentPage}/${this.commentPageSize}${this.userInfo.email ? '?email=' + this.userInfo.email : ''}`).then(res => res.json()).then(res => {
             if (res.success) {
                 return {
                     comments: res.response.comments,

@@ -13,10 +13,8 @@ const Login = (props) => {
     const [ logining, setLogining ] = useState(false)
     const { getFieldDecorator } = props.form
 
-    const env = process.env.NODE_ENV === 'development' ? Config.dev : null
-
     const login = ({ username, password, remember }) => {
-        return http.post(`${env.server}/admin/login`, { username, password, remember })
+        return http.post(`${Config.server}/rest/admin/login`, { username, password, remember })
     }
 
     // handle the event of submit.

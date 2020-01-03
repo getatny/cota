@@ -1,56 +1,32 @@
+const sequelize = require('../../db/models').sequelize
 const dbController = require('../model')
 const { errorResolver } = require('./resolver')
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
 
 const controller = {
-    getAdmins: async (ctx, next) => {
-        const { page = 1, pageSize = 20 } = ctx.params
-
+    getStatisticData: async (ctx, next) => {
         await errorResolver(async () => {
-            const { count, rows: users } = await dbController.findAdmins(parseInt(page), parseInt(pageSize))
+            const countSql = 'select `posts`.`postsCount`, `comments`.`passCommentsCount`, `comments`.`unpassCommentsCount`, `admins`.`adminsCount`, `users`.`usersCount`' +
+                ' from (select count(id) as postsCount from `posts`) as posts, (select count(case status when 1 then 1 else null end) as passCommentsCount, count(case status' +
+                ' when 0 then 1 else null end) as unpassCommentsCount from `comments`) as comments, (select count(id) as adminsCount from `admins`) as admins,' +
+                ' (select count(id) as usersCount from `users`) as users'
+            const [{ postsCount, passCommentsCount, unpassCommentsCount, adminsCount, usersCount }] = await sequelize.query(countSql, {
+                type: sequelize.QueryTypes.SELECT
+            })
+
+            const { rows: posts } = await dbController.findPosts(0, 8)
+            const { rows: comments } = await dbController.getComments({ limit: 8 })
+            const { rows: users } = await dbController.getUsers(0, 8)
 
             ctx.send({
-                data: users,
-                count
+                postsCount,
+                passCommentsCount,
+                unpassCommentsCount,
+                adminsCount,
+                usersCount,
+                posts,
+                comments,
+                users
             })
-        }, ctx)
-
-        return next()
-    },
-    getAdmin: async (ctx, next) => {
-        const userId = ctx.params.id
-
-        await errorResolver(async () => {
-            const user = await dbController.findAdminById(parseInt(userId))
-            ctx.send(user)
-        }, ctx)
-
-        return next()
-    },
-    login: async (ctx, next) => {
-        const { username, password, remember } = ctx.request.body
-
-        await errorResolver(async () => {
-            const user = await dbController.findAdminByUsername(username)
-
-            if (user) {
-                const authPass = await bcrypt.compare(password, user.password)
-
-                if (authPass) {
-                    ctx.send({
-                        user,
-                        token: jwt.sign({
-                            id: user.id,
-                            username: user.username
-                        }, 'cotaToken', { expiresIn: remember ? '7d' : '1d' })
-                    })
-                } else {
-                    ctx.sendError('User password is wrong.')
-                }
-            } else {
-                ctx.sendError("User doesn't exist.")
-            }
         }, ctx)
 
         return next()
