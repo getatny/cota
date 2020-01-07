@@ -14,6 +14,7 @@ module.exports = {
                 nickname: faker.name.firstName(0),
                 comment: faker.lorem.sentence(),
                 status: 1,
+                postId: 1,
                 createdAt: new Date(),
                 updatedAt: new Date()
             }
@@ -27,10 +28,18 @@ module.exports = {
                 nickname: faker.name.firstName(0),
                 comment: faker.lorem.sentence(),
                 status: 0,
+                postId: 1,
                 createdAt: new Date(),
                 updatedAt: new Date()
             }
         })
+        queryInterface.bulkInsert('posts', [{
+            title: 'test',
+            url: 'http://localhost:4444/comment-demo.html',
+            key: '2a3b8ddc4f809195bfbb586ee60a5193',
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }], {})
         return queryInterface.bulkInsert('comments', [...unpassComments, ...passComments], {})
     },
 

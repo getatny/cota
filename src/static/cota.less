@@ -1,6 +1,7 @@
-#cota {
+.cota-wrapper {
     font-family: "open sans", "PingFang SC", "Microsoft Yahei", "Wenquanyi Micro Hei", sans-serif;
     color: #515a6e;
+    font-size: 16px;
 
     .comment-box {
         width: 100%;
@@ -17,7 +18,7 @@
             box-sizing: border-box;
             padding: 15px;
             outline: none;
-            font-size: 1.2rem;
+            font-size: 1em;
             resize: none;
         }
 
@@ -27,15 +28,15 @@
             .emoji, .user-info-button {
                 position: relative;
                 float: left!important;
-                padding-top: calc((0.8rem / 2) + 3px);
-                padding-bottom: calc((0.8rem / 2) + 3px);
-                line-height: 1.1rem;
+                padding-top: 11.5px;
+                padding-bottom: 11.5px;
+                line-height: 1.1em;
                 height: 16px;
 
                 img {
-                    width: 1rem;
+                    width: 1.2em;
                     position: relative;
-                    top: 2px;
+                    top: 1px;
                     opacity: .6;
                 }
             }
@@ -59,7 +60,7 @@
                 padding: 10px 15px;
                 float: right;
                 cursor: pointer;
-                font-size: .8rem;
+                font-size: .8em;
 
                 &.submit {
                     background-color: #5bb7ed;
@@ -114,7 +115,7 @@
             }
 
             .login-button {
-                font-size: 0.6rem;
+                font-size: 0.6em;
                 width: 50px;
                 background: #5bb7ed;
                 color: #fff;
@@ -144,7 +145,7 @@
                             opacity: 0;
                             color: #fff;
                             z-index: 5;
-                            font-size: 1.4rem;
+                            font-size: 1.4em;
                             transition: opacity .45s ease;
                         }
 
@@ -209,12 +210,12 @@
 
                     .email {
                         color: #808695;
-                        font-size: .6rem;
+                        font-size: .6em;
                         margin-bottom: 5px;
                     }
 
                     .nickname {
-                        font-size: 1rem;
+                        font-size: 1em;
                     }
                 }
             }
@@ -279,7 +280,7 @@
 
                 .comment-info {
                     position: relative;
-                    line-height: 1rem;
+                    line-height: 1em;
                     margin-bottom: 3px;
 
                     .not-trust {
@@ -289,7 +290,7 @@
                         height: 10px;
                         background: #ff9900;
                         position: relative;
-                        top: calc(1rem / 2);
+                        top: calc(1em / 2);
                         transform: translateY(-50%);
                         border-radius: 50%;
                         cursor: pointer;
@@ -298,11 +299,13 @@
                     .nickname {
                         float: left;
                         text-decoration: none;
+                        color: #17233d;
+                        cursor: pointer;
                     }
 
                     .comment-date {
                         color: #808695;
-                        font-size: .6rem;
+                        font-size: .6em;
                         position: relative;
                         margin-left: 19px;
 
@@ -323,13 +326,13 @@
                         float: right;
                         opacity: 0;
                         transition: opacity .45s ease;
-                        font-size: .8rem;
+                        font-size: .8em;
                         padding: 5px 10px;
                         cursor: pointer;
                         background-color: #f9fafb;
                         position: absolute;
                         right: 0;
-                        top: 0;
+                        top: -10px;
                     }
                 }
 
@@ -373,7 +376,7 @@
         cursor: pointer;
         background-color: transparent;
         transition: all .45s ease;
-        font-size: .8rem;
+        font-size: .8em;
 
         &:hover {
             color: #5bb7ed;

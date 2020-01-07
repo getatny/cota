@@ -5,6 +5,7 @@ const profileImg = require('./imgs/profile.png')
 const successImg = require('./imgs/success.png')
 const infoImg = require('./imgs/info.png')
 const failedImg = require('./imgs/failed.png')
+const { format } = require('timeago.js')
 
 const http = { // a simple http query util
     get: (url) => {
@@ -44,7 +45,7 @@ class I18n {
             notTrusted: 'Reviewing'
         },
 
-        'zh-CN': {
+        'zh_CN': {
             button: {
                 submit: '提交',
                 cancelReply: '取消',
@@ -104,9 +105,13 @@ class CotaBase {
         if (!this.cota) { // if this page doesn't contain any element id called 'cota', below code will never run.
             return
         } else {
+            this.cota.classList.add('cota-wrapper')
             this.gravatarMirror = options.avatarUrl || this.gravatarMirror
             this.commentPageSize = options.pageSize || this.commentPageSize
-            if (options.lang) this.i18n.setLang(options.lang)
+            if (options.lang) {
+                this.lang = options.lang || 'en'
+                this.i18n.setLang(options.lang)
+            }
             this.emojiList = this.getEmojiFromServer()
             this.serverPath = this.getServerPathByJSLink()
 
@@ -196,7 +201,7 @@ class CotaBase {
                         website
                     }
                     window.localStorage.setItem('cota_user', JSON.stringify(this.userInfo))
-                    this.loginBox.remove()
+                    this.userInfoBoxContent.innerHTML = ''
                     this.renderUserInfoDetailBox()
                 } else {
                     this.notify('Email or Nickname cannot be empty!', 'failed')
@@ -315,13 +320,13 @@ class CotaBase {
         })
 
         // comment info el
-        const commentDate = item.createdAt === '刚刚' ? '刚刚' : new Date(Date.parse(item.createdAt)).toLocaleString()
+        const commentDate = format(Date.parse(item.createdAt), this.lang)
         const commentInfo = dom.create({
             type: 'div',
             className: 'comment-info',
             innerHtml: item.website ?
-                `${!item.status ? '<span class="not-trust" title="' + this.i18n.t('notTrusted') + '"></span>' : null}<a class="nickname" href="${item.website}">${item.nickname}</a><span class="comment-date">${commentDate}</span><div class="clear"></div>`
-                : `${!item.status ? '<span class="not-trust" title="' + this.i18n.t('notTrusted') + '"></span>' : null}<span class="nickname">${item.nickname}</span><span class="comment-date">${commentDate}</span><div class="clear"></div>`
+                `${!item.status ? '<span class="not-trust" title="' + this.i18n.t('notTrusted') + '"></span>' : ''}<a class="nickname" href="${item.website}" target="_blank">${item.nickname}</a><span class="comment-date">${commentDate}</span><div class="clear"></div>`
+                : `${!item.status ? '<span class="not-trust" title="' + this.i18n.t('notTrusted') + '"></span>' : ''}<span class="nickname">${item.nickname}</span><span class="comment-date">${commentDate}</span><div class="clear"></div>`
         })
 
         const reply = dom.createATag(this.replyComment, 'reply-comment', this.i18n.t('button.reply'))
@@ -434,12 +439,18 @@ class CotaBase {
         let actualLeft = element.offsetLeft;
         let current = element.offsetParent;
         while (current !== null) {
+            if (current.className !== this.commentBox.className) {
+                break
+            }
             actualLeft += current.offsetLeft;
             current = current.offsetParent;
         }
         let actualTop = element.offsetTop;
         current = element.offsetParent;
         while (current !== null) {
+            if (current.className !== this.commentBox.className) {
+                break
+            }
             actualTop += (current.offsetTop+current.clientTop);
             current = current.offsetParent;
         }

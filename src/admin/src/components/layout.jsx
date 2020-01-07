@@ -1,12 +1,14 @@
 import React from 'react'
 import { Layout, Menu } from 'antd'
 import { useHistory } from 'react-router-dom'
+import Logo from '../imgs/cota-admin-logo.png'
+import '../styles/layout.less'
 
 const { Header, Content, Footer } = Layout
 
 const menus = [
-    { id: 'dashboard', label: 'Dashboard', link: '/' },
-    { id: 'profile', label: 'Profile', link: '/profile' }
+    { id: 'dashboard', label: '仪表盘', link: '/' },
+    { id: 'profile', label: '个人', link: '/profile' }
 ]
 
 const LayoutComponent = (props) => {
@@ -20,7 +22,9 @@ const LayoutComponent = (props) => {
     return (
         <Layout id='main-layout'>
             <Header>
-                <div className="logo" />
+                <div className="logo">
+                    <img src={Logo} alt="Cota" />
+                </div>
                 <Menu theme='dark' mode='horizontal' style={{ lineHeight: '64px' }} defaultSelectedKeys={menus[0].id} onClick={({key}) => pushPathToHistory(key)}>
                     {menus.map(menu => (
                         <Menu.Item key={menu.id} title={menu.label}>{menu.label}</Menu.Item>
@@ -28,7 +32,7 @@ const LayoutComponent = (props) => {
                 </Menu>
             </Header>
 
-            <Content style={{ padding: '24px 50px' }}>
+            <Content style={{ padding: '24px 50px', minHeight: 'calc(100vh - 64px)' }}>
                 {props.children}
                 <Footer style={{ textAlign: 'center' }}>Cota ©2020 Created by Matthew Wang</Footer>
             </Content>

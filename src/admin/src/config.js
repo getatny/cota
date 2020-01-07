@@ -1,9 +1,11 @@
 const config = {
     dev: {
-        server: 'http://localhost:4444'
+        server: 'http://localhost:4444',
+        gravatarMirror: 'https://dn-qiniu-avatar.qbox.me/avatar'
     },
     prod: {
-        server: ''
+        server: '',
+        gravatarMirror: 'https://dn-qiniu-avatar.qbox.me/avatar'
     }
 }
 

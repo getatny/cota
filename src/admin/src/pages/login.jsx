@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import { login as loginEvent } from '../store/actions'
 import http from '../utils/http'
 import Config from '../config'
+import Logo from '../imgs/cota-admin-login-logo.png'
 import '../styles/login.less'
 
 const Password = Input.Password
@@ -56,7 +57,7 @@ const Login = (props) => {
         <div className="login-page">
             <div className="login-form">
                 <div className="logo">
-                    Cota
+                    <img src={Logo} alt="Cota" />
                 </div>
                 <Form className="login-form-input" onSubmit={handleSubmit}>
                     <Form.Item>
