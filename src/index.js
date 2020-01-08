@@ -8,6 +8,7 @@ const config = require('./utils/conf')
 const cors = require('@koa/cors')
 const bodyParser = require('koa-bodyparser')
 const koajwt = require('koa-jwt')
+const compress = require('koa-compress')
 const responseHandler = require('./middleware/responseHandler')
 const authErrorHandler = require('./middleware/authErrorHandler')
 
@@ -15,6 +16,12 @@ const app = new Koa()
 
 app.use(logger())
 app.use(bodyParser())
+app.use(compress({
+    filter: function (content_type) {
+        return /javascript/i.test(content_type)
+    },
+    threshold: 2048
+}))
 app.use(serve('dist'))
 app.use(serve('admin-public')) // load admin portal
 app.use(cors({
