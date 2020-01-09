@@ -125,7 +125,7 @@ class CotaBase {
         this.commentBox = dom.create({
             type: 'div',
             className: 'comment-box',
-            innerHtml: '<textarea class="comment-input"></textarea><div id="comment-btns"><div class="clear"></div></div>'
+            innerHtml: '<textarea class="comment-input"></textarea><div id="comment-btns"></div><div class="cota-info">i<a href="https://github.com/getatny/cota" target="_blank">powered by Cota</a></div>'
         })
 
         // user infomation button
@@ -374,7 +374,7 @@ class CotaBase {
                     website: res.response.website,
                     nickname: res.response.nickname,
                     comment: res.response.comment,
-                    createdAt: '刚刚'
+                    createdAt: format(new Date().getTIme())
                 })
 
                 if (this.commentTo === null) {

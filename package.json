@@ -48,6 +48,8 @@
     "export:prod": "webpack --mode=production",
     "migrate": "sequelize-cli db:migrate && sequelize-cli db:seed --seed 20191227041232-default-administrator.js",
     "i:yarn": "yarn install && cd src/admin && yarn install",
-    "i:npm": "npm install && cd src/admin && npm install"
+    "i:npm": "npm install && cd src/admin && npm install",
+    "build": "cd src/admin && npm run build",
+    "demo:comment": "sequelize-cli db:seed --seed 20200103030217-demo-comments.js"
   }
 }

@@ -32,8 +32,54 @@
             resize: none;
         }
 
+        .cota-info {
+            font-size: .6em;
+            color: #fff;
+            background-color: #000;
+            position: absolute;
+            border-radius: 50%;
+            top: 5px;
+            display: flex;
+            width: 15px;
+            height: 15px;
+            align-items: center;
+            justify-content: center;
+            opacity: .3;
+            right: 5px;
+            cursor: pointer;
+            transition: opacity .4s ease;
+
+            &:hover {
+                opacity: .5;
+
+                a {
+                    right: 0;
+                    visibility: visible;
+                }
+            }
+
+            a {
+                color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: #000;
+                height: 15px;
+                padding: 0 20px 0 10px;
+                position: absolute;
+                right: -200px;
+                z-index: -1;
+                border-radius: 15px;
+                text-decoration: none;
+                transition: all .4s ease;
+                width: 73px;
+                visibility: hidden;
+            }
+        }
+
         #comment-btns {
             background-color: #f9fafb;
+            display: flow-root;
 
             .emoji, .user-info-button {
                 position: relative;
