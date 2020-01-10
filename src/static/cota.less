@@ -138,6 +138,16 @@
         }
     }
 
+    .comment-amount {
+        margin-bottom: 30px;
+        font-size: 1.2em;
+        padding: 0 10px;
+
+        span {
+            margin-right: 5px;
+        }
+    }
+
     #emoji-select-box, #user-info-box {
         position: absolute;
         visibility: hidden;
@@ -165,7 +175,7 @@
                 margin-right: 2px;
 
                 &:nth-child(8n) {
-                    margin-right: 0px;
+                    margin-right: 0;
                 }
             }
 
@@ -306,11 +316,12 @@
     }
 
     & > ul {
-        padding-left: 0px;
+        padding-left: 0;
     }
 
     #comment-list {
         list-style: none;
+        padding: 0 10px;
 
         & > li > ul, & > li > ul > li > ul {
             padding-left: 70px;
@@ -318,7 +329,7 @@
 
         li, ul {
             list-style: none;
-            padding-left: 0px;
+            padding-left: 0;
         }
 
         .comment-list-item {

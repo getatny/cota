@@ -1,121 +1,45 @@
 const md5 = require('js-md5')
+const { format } = require('timeago.js')
 const dom = require('./plugin/dom')
+const http = require('./plugin/http')
+const I18n = require('./plugin/i18n')
+const validator = require('./plugin/validator')
 const emoticonImg = require('./imgs/emoticon.png')
 const profileImg = require('./imgs/profile.png')
 const successImg = require('./imgs/success.png')
 const infoImg = require('./imgs/info.png')
 const failedImg = require('./imgs/failed.png')
-const { format } = require('timeago.js')
-
-const http = { // a simple http query util
-    get: (url) => {
-        return fetch(url)
-    },
-    post: (url, data) => {
-        return fetch(url, {
-            method: 'post',
-            headers: {
-                'content-type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-    }
-}
-
-class I18n {
-
-    constructor(lang) {
-        this.lang = lang
-    }
-
-    trans = {
-        en: {
-            button: {
-                submit: 'Submit',
-                cancelReply: 'Cancel',
-                reply: 'Reply',
-                login: 'Login',
-                logout: 'Logout'
-            },
-            input: {
-                email: 'E-Mail',
-                nickname: 'Nickname',
-                website: 'Website: http://'
-            },
-            notTrusted: 'Reviewing'
-        },
-
-        'zh_CN': {
-            button: {
-                submit: '提交',
-                cancelReply: '取消',
-                reply: '回复',
-                login: '登记',
-                logout: '注销'
-            },
-            input: {
-                email: '电子邮箱',
-                nickname: '昵称',
-                website: '网址: http://'
-            },
-            notTrusted: '待审核'
-        }
-    }
-
-    t(key) {
-        const keys = key.split('.')
-        let string = this.trans[this.lang]
-
-        for (let i = 0; i < keys.length; i++) {
-            string = string[keys[i]]
-        }
-
-        return string ? string : key
-    }
-
-    setLang(lang) {
-        this.lang = lang
-    }
-}
-
-
 
 class CotaBase {
     constructor(options) {
         this.d = window.document
-        this.cota = this.d.getElementById('cota')
-        this.gravatarMirror = 'https://dn-qiniu-avatar.qbox.me/avatar'
-        this.i18n = new I18n('en')
-
         this.commentPage = 1 // current comment page number
-        this.commentPageSize = 10 // how many comments will be shown per page
+
         this.commentTo = null
 
         this.emojiSelectBoxStatus = false
         this.userInfoBoxStatus = false
 
         this.notificationTimer = null
-        this.userInfo = JSON.parse(window.localStorage.getItem('cota_user')) || {}
+
+        this.userInfo = JSON.parse(window.localStorage.getItem('cota_user')) || { email: undefined, nickname: undefined, website: undefined }
         this.init(options)
     }
 
     init = (options) => {
-        this.cota = this.d.getElementById(options.el)|| this.cota
+        this.cota = this.d.getElementById(options.el)
         
-        if (!this.cota) { // if this page doesn't contain any element id called 'cota', below code will never run.
-            return
-        } else {
+        if (this.cota) {
             this.cota.classList.add('cota-wrapper')
-            this.gravatarMirror = options.avatarUrl || this.gravatarMirror
-            this.commentPageSize = options.pageSize || this.commentPageSize
-            if (options.lang) {
-                this.lang = options.lang || 'en'
-                this.i18n.setLang(options.lang)
-            }
-            this.emojiList = this.getEmojiFromServer()
-            this.serverPath = this.getServerPathByJSLink()
+            this.controller = new CotaController()
+            this.gravatarMirror = options.avatarUrl
+            this.commentPageSize = options.pageSize
+            this.lang = options.lang
+            this.i18n = new I18n(options.lang)
 
-            this.importCSS('https://fonts.font.im/css?family=Open+Sans') // 加载谷歌字体
+            this.emojiList = this.controller.getEmojiFromServer()
+
+            this.importCSS('https://fonts.font.im/css?family=Open+Sans') // load google font
             this.generateComment()
         }
     }
@@ -128,7 +52,7 @@ class CotaBase {
             innerHtml: '<textarea class="comment-input"></textarea><div id="comment-btns"></div><div class="cota-info">i<a href="https://github.com/getatny/cota" target="_blank">Powered by Cota</a></div>'
         })
 
-        // user infomation button
+        // user information button
         const userInfoButton = dom.createATag(this.showPopoverBox, 'user-info-button', `<img src=${profileImg} alt="profile" />`)
 
         // emoji button el
@@ -141,7 +65,14 @@ class CotaBase {
         this.cancelReplyButton = dom.createATag(this.cancelReply, 'cancel-reply-button', this.i18n.t('button.cancelReply'))
         this.cancelReplyButton.style.display = 'none' // for default situation, this button will be hide
 
-        // commnet list el
+        // comment number
+        this.commentAmount = dom.create({
+            type: 'div',
+            className: 'comment-amount',
+            innerHtml: `<span></span>${this.i18n.t('commentAmount')}`
+        })
+
+        // comment list el
         this.commentListEl = dom.create({ type: 'ul', id: 'comment-list' })
 
         // emoji box
@@ -153,7 +84,7 @@ class CotaBase {
         const emojiSelectBoxContent = dom.create({ type: 'div', className: 'box-content' })
         this.emojiSelectBox.prepend(emojiSelectBoxContent)
 
-        // user infomation box
+        // user information box
         this.userInfoBox = dom.create({
             type: 'div',
             id: 'user-info-box',
@@ -168,7 +99,7 @@ class CotaBase {
         this.d.documentElement.addEventListener('click', this.hidePopoverBox) // add a global listener to close popover box
 
         // inject element
-        dom.append(this.cota, [this.commentBox, this.commentListEl, this.emojiSelectBox, this.userInfoBox])
+        dom.append(this.cota, [this.commentBox, this.commentAmount, this.commentListEl, this.emojiSelectBox, this.userInfoBox])
         dom.prepend(this.commentBox.querySelector('#comment-btns'), [submitButton, this.cancelReplyButton, this.emojiButton, userInfoButton])
         // append emoji list to emoji select popover box
         dom.append(emojiSelectBoxContent, this.emojiList, this.createEmojiEl)
@@ -184,7 +115,7 @@ class CotaBase {
             this.loginBox = dom.create({
                 type: 'div',
                 className: 'user-info',
-                innerHtml: `<div class="user-avatar"><img src="${this.gravatarMirror}/${md5('')}" /></div><div class="user-login"><form id="login-form"><input name="email" placeholder="${this.i18n.t('input.email')}" /><input name="nickname" placeholder="${this.i18n.t('input.nickname')}" /><input name="website" placeholder="${this.i18n.t('input.website')}" /></form></div>`
+                innerHtml: `<div class="user-avatar"><img src="${this.gravatarMirror}/${md5('')}" alt="user" /></div><div class="user-login"><form id="login-form"><input name="email" placeholder="${this.i18n.t('input.email')}" /><input name="nickname" placeholder="${this.i18n.t('input.nickname')}" /><input name="website" placeholder="${this.i18n.t('input.website')}" /></form></div>`
             })
 
             const loginButton = dom.createATag(e => {
@@ -217,7 +148,7 @@ class CotaBase {
         const userInfoDetailBox = dom.create({
             type: 'div',
             className: 'user-info logout',
-            innerHtml: `<div class="user-avatar" title="${this.i18n.t('button.logout')}"><img src="${this.gravatarMirror}/${md5(userInfo.email)}" /></div><div class="info-detail"><div class="email">${userInfo.email}</div><div class="nickname">${userInfo.nickname}</div></div>`
+            innerHtml: `<div class="user-avatar" title="${this.i18n.t('button.logout')}"><img src="${this.gravatarMirror}/${md5(userInfo.email)}" alt="${userInfo.nickname}" /></div><div class="info-detail"><div class="email">${userInfo.email}</div><div class="nickname">${userInfo.nickname}</div></div>`
         })
 
         userInfoDetailBox.querySelector('.user-avatar').addEventListener('click', e => {
@@ -239,7 +170,8 @@ class CotaBase {
     }
 
     renderCommentList = () => {
-        this.getCommentFromServer().then(res => {
+        this.controller.getCommentFromServer(this.d.location.pathname, this.commentPage, this.commentPageSize, this.userInfo).then(res => {
+            this.commentAmount.querySelector('span').innerText = res.count
             const commentList = res.comments
 
             // render main comments
@@ -262,7 +194,7 @@ class CotaBase {
                     innerHtml: 'Load More'
                 }, {
                     event: 'click',
-                    fn: this.loadMoreComments
+                    fn: this.controller.loadMoreComments
                 })
                 this.cota.append(loadMoreCommentsButton)
             }
@@ -277,7 +209,7 @@ class CotaBase {
         // hide main comment box
         this.cota.querySelector('.comment-box').remove()
 
-        // show commnet box below the comment which user wanna reply
+        // show comment box below the comment which user wanna reply
         this.switchCommentBoxPlace(e.target.parentElement.nextElementSibling.nextElementSibling)
         this.cancelReplyButton.style.display = 'block'
         this.commentTo = e.target.parentElement.parentElement.parentElement
@@ -338,64 +270,68 @@ class CotaBase {
     }
 
     getCommentAndSubmit = (e) => {
-        if (!(this.userInfo && this.userInfo.email && this.userInfo.nickname)) {
+        validator.validate(this.userInfo, {
+            email: 'required,email',
+            nickname: 'required',
+            website: 'website'
+        }, this.i18n).then(() => {
+            const value = e.target.parentElement.previousElementSibling.value
+
+            return validator.validate({ comment: value }, { comment: 'required' }, this.i18n).then(() => {
+                this.controller.submitComment({
+                    key: md5(this.d.location.pathname),
+                    commentContent: value,
+                    email: this.userInfo.email,
+                    nickname: this.userInfo.nickname,
+                    title: this.d.title,
+                    url: this.d.location.href,
+                    parentId: this.commentTo ? parseInt(this.commentTo.dataset.id) : 0,
+                    rootId: this.commentTo ? parseInt(this.commentTo.dataset.rootid) : 0
+                }).then(res => res.json()).then(res => {
+                    if (res.success) {
+                        this.notify(this.i18n.t('commentSubmitSuccess'), 'success')
+
+                        const commentListItem = this.createCommentItem({
+                            id: res.response.id,
+                            postId: res.response.postId,
+                            parentId: res.response.parentId,
+                            rootId: res.response.rootId,
+                            email: res.response.email,
+                            website: res.response.website,
+                            nickname: res.response.nickname,
+                            comment: res.response.comment,
+                            createdAt: format(new Date().getTime())
+                        })
+
+                        if (this.commentTo === null) {
+                            this.commentListEl.prepend(commentListItem)
+                        } else {
+                            this.commentTo.children[2].append(commentListItem)
+                        }
+
+                        if (e.target.previousElementSibling.style.display === 'block') {
+                            e.target.previousElementSibling.click()
+                        }
+                        e.target.parentElement.previousElementSibling.value = ''
+                    } else {
+                        this.notify(this.i18n.t('commentSubmitFailed'), 'failed')
+                    }
+                }).catch(() => this.notify(this.i18n.t('commentSubmitFailed'), 'failed'))
+            })
+        }).catch(errors => {
             e.stopPropagation()
-            this.notify('Please complete your personal information!', 'failed')
+            let msg = ''
+            errors.forEach((item, index) => {
+                msg += `${index + 1}.${item}\n`
+            })
+            this.notify(msg, 'failed')
             this.commentBox.querySelector('.user-info-button').click()
-            return
-        }
-
-        const value = e.target.parentElement.previousElementSibling.value
-        
-        if (value === '') { // comment value cannot be empty
-            this.notify('Comment cannot be empty!', 'failed')
-            return
-        }
-
-        http.post(`${this.serverPath}/rest/public/comment/create`, {
-            key: md5(this.d.location.pathname),
-            commentContent: value,
-            email: this.userInfo.email,
-            nickname: this.userInfo.nickname,
-            title: this.d.title,
-            url: this.d.location.href,
-            parentId: this.commentTo ? parseInt(this.commentTo.dataset.id) : 0,
-            rootId: this.commentTo ? parseInt(this.commentTo.dataset.rootid) : 0
-        }).then(res => res.json()).then(res => {
-            if (res.success) {
-                this.notify('Submit comment successfully!', 'success')
-
-                const commentListItem = this.createCommentItem({
-                    id: res.response.id,
-                    postId: res.response.postId,
-                    parentId: res.response.parentId,
-                    rootId: res.response.rootId,
-                    email: res.response.email,
-                    website: res.response.website,
-                    nickname: res.response.nickname,
-                    comment: res.response.comment,
-                    createdAt: format(new Date().getTIme())
-                })
-
-                if (this.commentTo === null) {
-                    this.commentListEl.prepend(commentListItem)
-                } else {
-                    this.commentTo.children[2].append(commentListItem)
-                }
-
-                if (e.target.previousElementSibling.style.display === 'block') {
-                    e.target.previousElementSibling.click()
-                }
-                e.target.parentElement.previousElementSibling.value = ''
-            } else {
-                this.notify('Submit comment failed!', 'failed')
-            }
-        }).catch(() => this.notify('Submit comment failed!', 'failed'))
+        })
     }
 
     showPopoverBox = (e) => {
         let target = e.target
-        let actualTarget = null
+        let actualTarget
 
         if (target.className === 'emoji' || target.alt === 'emoticon') {
             actualTarget = this.emojiSelectBox
@@ -484,9 +420,19 @@ class CotaBase {
             this.notificationTimer = null
         }, delay)
     }
+}
 
-    getCommentFromServer = () => {
-        return http.get(`${this.serverPath}/rest/public/comments/${md5(this.d.location.pathname)}/${this.commentPage}/${this.commentPageSize}${this.userInfo.email ? '?email=' + this.userInfo.email : ''}`).then(res => res.json()).then(res => {
+class CotaController {
+    constructor() {
+        this.serverPath = this.getServerPathByJSLink()
+    }
+
+    submitComment = (data) => {
+        return http.post(`${this.serverPath}/rest/public/comment/create`, data)
+    }
+
+    getCommentFromServer = (path, page, pageSize, userInfo) => {
+        return http.get(`${this.serverPath}/rest/public/comments/${md5(path)}/${page}/${pageSize}${userInfo.email ? '?email=' + userInfo.email : ''}`).then(res => res.json()).then(res => {
             if (res.success) {
                 return {
                     comments: res.response.comments,
@@ -496,8 +442,8 @@ class CotaBase {
         })
     }
 
-    loadMoreComments = (e) => {
-        
+    loadMoreComments = () => {
+
     }
 
     getEmojiFromServer = () => {
@@ -506,12 +452,19 @@ class CotaBase {
 
     getServerPathByJSLink = () => {
         const schema = Array.from(document.scripts).find(item => item.src.indexOf('cota.min.js') > -1).src.match(/^(\S*):\/\//)[1]
-        const server = Array.from(document.scripts).find(item => item.src.indexOf('cota.min.js') > -1).src.match(/[https|http]:\/\/(\S*)\//)[1]
+        const server = Array.from(document.scripts).find(item => item.src.indexOf('cota.min.js') > -1).src.match(/http[s]?:\/\/(\S*)\//)[1]
         return `${schema}://${server}`
     }
 }
 
 function Cota(options = {}) {
+    options = {
+        el: 'cota',
+        avatarUrl: 'https://dn-qiniu-avatar.qbox.me/avatar',
+        pageSize: 10,
+        lang: 'en',
+        ...options
+    }
     return new CotaBase(options)
 }
 
