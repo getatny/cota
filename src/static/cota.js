@@ -125,7 +125,7 @@ class CotaBase {
         this.commentBox = dom.create({
             type: 'div',
             className: 'comment-box',
-            innerHtml: '<textarea class="comment-input"></textarea><div id="comment-btns"></div><div class="cota-info">i<a href="https://github.com/getatny/cota" target="_blank">powered by Cota</a></div>'
+            innerHtml: '<textarea class="comment-input"></textarea><div id="comment-btns"></div><div class="cota-info">i<a href="https://github.com/getatny/cota" target="_blank">Powered by Cota</a></div>'
         })
 
         // user infomation button
@@ -439,7 +439,7 @@ class CotaBase {
         let actualLeft = element.offsetLeft;
         let current = element.offsetParent;
         while (current !== null) {
-            if (current.className !== this.commentBox.className) {
+            if (current.className === this.cota.className) {
                 break
             }
             actualLeft += current.offsetLeft;
@@ -448,7 +448,7 @@ class CotaBase {
         let actualTop = element.offsetTop;
         current = element.offsetParent;
         while (current !== null) {
-            if (current.className !== this.commentBox.className) {
+            if (current.className === this.cota.className) {
                 break
             }
             actualTop += (current.offsetTop+current.clientTop);

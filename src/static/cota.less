@@ -2,6 +2,7 @@
     font-family: "open sans", "PingFang SC", "Microsoft Yahei", "Wenquanyi Micro Hei", sans-serif;
     color: #515a6e;
     font-size: 16px;
+    position: relative;
 
     a {
         box-shadow: none;
@@ -30,24 +31,34 @@
             outline: none;
             font-size: 1em;
             resize: none;
+
+            &::-webkit-scrollbar {
+                background-color: transparent;
+                width: 5px;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: #b2b2b2;
+                border-radius: 10px;
+            }
         }
 
         .cota-info {
-            font-size: .6em;
+            font-size: .5em;
             color: #fff;
             background-color: #000;
             position: absolute;
             border-radius: 50%;
-            top: 5px;
+            top: 10px;
+            right: 10px;
             display: flex;
             width: 15px;
             height: 15px;
             align-items: center;
             justify-content: center;
             opacity: .3;
-            right: 5px;
             cursor: pointer;
-            transition: opacity .4s ease;
+            transition: opacity .3s ease;
 
             &:hover {
                 opacity: .5;
@@ -71,8 +82,8 @@
                 z-index: -1;
                 border-radius: 15px;
                 text-decoration: none;
-                transition: all .4s ease;
-                width: 73px;
+                transition: all .3s ease;
+                width: 100px;
                 visibility: hidden;
             }
         }
@@ -334,6 +345,10 @@
                 margin-left: 70px;
                 color: #515a6e;
                 padding-top: 5px;
+
+                .cota-info {
+                    display: none;
+                }
 
                 .comment-info {
                     position: relative;
