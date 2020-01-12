@@ -172,21 +172,37 @@ class CotaBase {
     renderCommentList = () => {
         this.controller.getCommentFromServer(this.d.location.pathname, this.commentPage, this.commentPageSize, this.userInfo).then(res => {
             this.commentAmount.querySelector('span').innerText = res.count
-            const commentList = res.comments
+            this.renderCommentListItem(res.comments, res.count)
+        })
+    }
 
-            // render main comments
-            commentList.mainComments.forEach(item => {
-                const commentListItem = this.createCommentItem(item)
-                this.commentListEl.append(commentListItem)
-            })
+    renderCommentListItem = (commentList, count) => {
+        // render main comments
+        commentList.mainComments.forEach(item => {
+            const commentListItem = this.createCommentItem(item)
+            this.commentListEl.append(commentListItem)
+        })
 
-            // render child comments
-            commentList.childComments.forEach(item => {
-                const commentListItem = this.createCommentItem(item, true)
-                this.commentListEl.querySelector(`#comment-list-item-${item.parentId} .child`).append(commentListItem)
-            })
+        // render child comments
+        commentList.childComments.forEach(item => {
+            const commentListItem = this.createCommentItem(item, true)
+            this.commentListEl.querySelector(`#comment-list-item-${item.parentId} .child`).append(commentListItem)
+        })
 
-            if (res.count > this.commentPageSize) {
+        this.renderLoadMoreButton(count)
+    }
+
+    renderLoadMoreButton = (count) => {
+        const ifExist = this.d.querySelector('#load-more')
+
+        if (ifExist) {
+            if (count > (this.commentPage * this.commentPageSize)) {
+                ifExist.style.display = 'inline-block'
+            } else {
+                ifExist.style.display = 'none'
+            }
+        } else {
+            if (count > (this.commentPage * this.commentPageSize)) {
                 // load more comments button when the number of all comments bigger than the size per page we set
                 const loadMoreCommentsButton = dom.create({
                     type: 'div',
@@ -194,11 +210,11 @@ class CotaBase {
                     innerHtml: 'Load More'
                 }, {
                     event: 'click',
-                    fn: this.controller.loadMoreComments
+                    fn: this.loadMoreComments
                 })
                 this.cota.append(loadMoreCommentsButton)
             }
-        })
+        }
     }
 
     switchCommentBoxPlace = (el) => {
@@ -319,13 +335,13 @@ class CotaBase {
                 }).catch(() => this.notify(this.i18n.t('commentSubmitFailed'), 'failed'))
             })
         }).catch(errors => {
-            e.stopPropagation()
             let msg = ''
             errors.forEach((item, index) => {
-                msg += `${index + 1}.${item}\n`
+                errors.length > 1 ? (msg += `${index + 1}.${item}\n`) : null
+                errors.length === 1 ? (msg += `${item}`) : null
             })
             this.notify(msg, 'failed')
-            this.commentBox.querySelector('.user-info-button').click()
+            if (!this.userInfo.email) this.commentBox.querySelector('.user-info-button').click()
         })
     }
 
@@ -369,6 +385,13 @@ class CotaBase {
         const content = e.target.innerText
         const inputBox = this.commentBox.children[0]
         inputBox.value = inputBox.value + content
+    }
+
+    loadMoreComments = () => {
+        this.controller.getCommentFromServer(this.d.location.pathname, (this.commentPage + 1), this.commentPageSize, this.userInfo).then(res => {
+            this.commentPage++
+            this.renderCommentListItem(res.comments, res.count)
+        })
     }
 
     getElementPagePosition = (element) => {
@@ -440,10 +463,6 @@ class CotaController {
                 }
             }
         })
-    }
-
-    loadMoreComments = () => {
-
     }
 
     getEmojiFromServer = () => {
