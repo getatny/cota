@@ -1,12 +1,10 @@
 {
   "port": 4444,
   "api": {
-    "whiteList": [
-      "localhost"
-    ],
+    "whiteList": "localhost",
     "jwtSecret": "1233211234567"
   },
   "admin": {
-    "trustThreshhold": 0
+    "trustThreshold": 0
   }
 }

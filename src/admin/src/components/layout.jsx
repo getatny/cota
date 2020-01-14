@@ -1,5 +1,6 @@
 import React from 'react'
 import { Layout, Menu } from 'antd'
+import { withRouter } from 'react-router'
 import { useHistory } from 'react-router-dom'
 import Logo from '../imgs/cota-admin-logo.png'
 import '../styles/layout.less'
@@ -8,11 +9,13 @@ const { Header, Content, Footer } = Layout
 
 const menus = [
     { id: 'dashboard', label: '仪表盘', link: '/' },
-    { id: 'profile', label: '个人', link: '/profile' }
+    { id: 'profile', label: '个人', link: '/profile' },
+    { id: 'configuration', label: '设置', link: '/settings' }
 ]
 
 const LayoutComponent = (props) => {
     const history = useHistory()
+    const selectedMenu = menus.filter(item => props.location.pathname === item.link).map(item => item.id)
 
     const pushPathToHistory = (key) => {
         const item = menus.find(item => item.id === key)
@@ -25,7 +28,7 @@ const LayoutComponent = (props) => {
                 <div className="logo">
                     <img src={Logo} alt="Cota" />
                 </div>
-                <Menu theme='dark' mode='horizontal' style={{ lineHeight: '64px' }} defaultSelectedKeys={menus[0].id} onClick={({key}) => pushPathToHistory(key)}>
+                <Menu theme='dark' mode='horizontal' style={{ lineHeight: '64px' }} selectedKeys={selectedMenu} onClick={({key}) => pushPathToHistory(key)}>
                     {menus.map(menu => (
                         <Menu.Item key={menu.id} title={menu.label}>{menu.label}</Menu.Item>
                     ))}
@@ -40,4 +43,4 @@ const LayoutComponent = (props) => {
     )
 }
 
-export default LayoutComponent
+export default withRouter(LayoutComponent)

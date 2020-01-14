@@ -63,10 +63,10 @@ const controller = {
         await errorResolver(async () => {
             await dbController.updateCommentStatus(commentId)
             
-            if (config.getConfig('admin.trustThreshhold') !== 0) {
+            if (config.getConfig('admin.trustThreshold') !== 0) {
                 const approvedCommentsCount = dbController.countComments({ email, status: 1 })
 
-                if (approvedCommentsCount === config.admin.trustThreshhold) {
+                if (approvedCommentsCount === config.admin.trustThreshold) {
                     dbController.createUser({ email }) // add current user as a truted user
                 }
             }

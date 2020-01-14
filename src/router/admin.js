@@ -25,6 +25,8 @@ router.post('/user/:email', userController.addTrustUser)
 
 // =============================================================================================== admin
 router.get('/dashboard/statistic', adminController.getStatisticData)
+router.get('/settings', administratorController.getSettings)
+router.post('/settings', administratorController.setSettings)
 
 const api = Router({ prefix: '/rest/admin' }).extend(router)
 

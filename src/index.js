@@ -27,7 +27,8 @@ app.use(serve('admin-public')) // load admin portal
 app.use(cors({
     origin: function(ctx) {
         let isWhiteList = null
-        config.getConfig('api.whiteList').forEach(item => ctx.request.header.origin.indexOf(item) > -1 ? isWhiteList = ctx.request.header.origin : null)
+        const whiteList = config.getConfig('api.whiteList').split(',')
+        whiteList.forEach(item => ctx.request.header.origin.indexOf(item) > -1 ? isWhiteList = ctx.request.header.origin : null)
         return isWhiteList
     }
 }))

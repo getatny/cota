@@ -55,6 +55,26 @@ const controller = {
         }, ctx)
 
         return next()
+    },
+    getSettings: async (ctx, next) => {
+        await errorResolver(() => {
+            const configuration = config.getConfigs()
+            ctx.send({
+                config: configuration
+            })
+        }, ctx)
+
+        return next()
+    },
+    setSettings: async (ctx, next) => {
+        const { configs } = ctx.request.body
+
+        await errorResolver(() => {
+            config.setConfigs(configs)
+            ctx.send()
+        }, ctx)
+
+        next()
     }
 }
 

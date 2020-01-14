@@ -4,7 +4,9 @@ import LayoutComponent from "../components/layout"
 const Profile = () => {
     return (
         <LayoutComponent>
-            123
+            <div id="profile-page">
+                123
+            </div>
         </LayoutComponent>
     )
 }

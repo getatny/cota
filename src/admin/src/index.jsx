@@ -7,6 +7,7 @@ import { login } from "./store/actions"
 import Dashboard from './pages/dashboard'
 import Login from './pages/login'
 import Profile from './pages/profile'
+import Configuration from './pages/configuration'
 import * as serviceWorker from './serviceWorker'
 import './styles/index.less'
 
@@ -51,9 +52,10 @@ const App = () => {
     return (
         <HashRouter>
             <Switch>
-                <PrivateRoute exact path='/' component={Dashboard} isLogin={isLogin}/>
-                <PrivateRoute exact path='/profile' component={Profile} isLogin={isLogin}/>
-                <HideRoute exact path='/login' component={Login} isLogin={isLogin}/>
+                <PrivateRoute exact path='/' component={Dashboard} isLogin={isLogin} />
+                <PrivateRoute exact path='/profile' component={Profile} isLogin={isLogin} />
+                <PrivateRoute exact path='/settings' component={Configuration} isLogin={isLogin} />
+                <HideRoute exact path='/login' component={Login} isLogin={isLogin} />
             </Switch>
         </HashRouter>
     )
