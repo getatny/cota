@@ -47,7 +47,7 @@ const Login = (props) => {
                 }).catch(e => {
                     console.log(e)
                     setLogining(false)
-                    message.error(e)
+                    message.error('Login failed.')
                 })
             }
         })

@@ -16,8 +16,8 @@ Cota 是一个使用Javascript语言编写的，以 sqlite 作为数据存储的
 ```bash
 git clone git@github.com:getatny/cota.git
 cd cota
-yarn yarn-install # 安装server及admin所需依赖
-yarn export:prod # 导出静态资源
+yarn i:yarn # 安装server及admin所需依赖，npm需要使用npm run i:npm
+yarn export:prod # 导出静态资源，测试环境下可使用yarn export:dev，将会有完整的error信息显示
 yarn migrate # 创建数据库，添加默认admin账号 cota-admin / cota-admin (请记得修改密码)
 yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进行反向代理提供公网访问
 ```
@@ -34,7 +34,7 @@ yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进
 <script>
     new Cota({
         el: 'cota',
-        lang: 'zh-CN'
+        lang: 'zh_CN'
     });
 </script>
 ```
@@ -65,13 +65,18 @@ yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进
 |字段|参数类型|作用|默认值|
 |:------:|:------:|:------:|:------:|
 |`el`|string|设置输入框注入节点(id)|cota|
-|`avatarUrl`|string|gravatar头像CDN|七牛CDN|
+|`avatarMirror`|string|gravatar头像CDN|七牛CDN|
+|`defaultAvatar`|string|用户没有自定义头像时显示的默认头像|''|
 |`pageSize`|number|每页评论数|10|
 |`lang`|string|显示语言|en|
 
 ## 管理后台
 
-在你成功部署 `Cota` 服务之后，可以直接访问 `http://localhost:4444` 访问cota提供的管理后台。默认的账号 / 密码为： cota-admin / cota-admin
+```bash
+yarn build # 构建后台静态文件，静态文件将会生成到项目根目录下admin-public中
+```
+
+运行以上命令，在你成功部署 `Cota` 服务之后，可以直接通过 `http://localhost:4444` 访问cota提供的管理后台。默认的账号 / 密码为： cota-admin / cota-admin
 
 ## 自定义？
 

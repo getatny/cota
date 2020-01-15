@@ -1,5 +1,5 @@
-const md5 = require('js-md5')
 const { format } = require('timeago.js')
+const md5 = require('js-md5')
 const dom = require('./plugin/dom')
 const http = require('./plugin/http')
 const I18n = require('./plugin/i18n')
@@ -32,8 +32,9 @@ class CotaBase {
         if (this.cota) {
             this.cota.classList.add('cota-wrapper')
             this.controller = new CotaController()
-            this.gravatarMirror = options.avatarUrl
             this.commentPageSize = options.pageSize
+            this.avatarMirror = options.avatarMirror
+            this.defaultAvatar = options.defaultAvatar
             this.lang = options.lang
             this.i18n = new I18n(options.lang)
 
@@ -115,7 +116,7 @@ class CotaBase {
             this.loginBox = dom.create({
                 type: 'div',
                 className: 'user-info',
-                innerHtml: `<div class="user-avatar"><img src="${this.gravatarMirror}/${md5('')}" alt="user" /></div><div class="user-login"><form id="login-form"><input name="email" placeholder="${this.i18n.t('input.email')}" /><input name="nickname" placeholder="${this.i18n.t('input.nickname')}" /><input name="website" placeholder="${this.i18n.t('input.website')}" /></form></div>`
+                innerHtml: `<div class="user-avatar"><img src="${this.avatarMirror}/${md5('')}?d=${this.defaultAvatar}" alt="user" /></div><div class="user-login"><form id="login-form"><input name="email" placeholder="${this.i18n.t('input.email')}" /><input name="nickname" placeholder="${this.i18n.t('input.nickname')}" /><input name="website" placeholder="${this.i18n.t('input.website')}" /></form></div>`
             })
 
             const loginButton = dom.createATag(e => {
@@ -148,7 +149,7 @@ class CotaBase {
         const userInfoDetailBox = dom.create({
             type: 'div',
             className: 'user-info logout',
-            innerHtml: `<div class="user-avatar" title="${this.i18n.t('button.logout')}"><img src="${this.gravatarMirror}/${md5(userInfo.email)}" alt="${userInfo.nickname}" /></div><div class="info-detail"><div class="email">${userInfo.email}</div><div class="nickname">${userInfo.nickname}</div></div>`
+            innerHtml: `<div class="user-avatar" title="${this.i18n.t('button.logout')}"><img src="${this.avatarMirror}/${md5(userInfo.email)}?d=${this.defaultAvatar}" alt="${userInfo.nickname}" /></div><div class="info-detail"><div class="email">${userInfo.email}</div><div class="nickname">${userInfo.nickname}</div></div>`
         })
 
         userInfoDetailBox.querySelector('.user-avatar').addEventListener('click', e => {
@@ -246,7 +247,7 @@ class CotaBase {
             type: 'li',
             className: 'comment-list-item',
             id: `comment-list-item-${item.id}`,
-            innerHtml: `<div class="avatar"><img src="${this.gravatarMirror}/${md5(item.email)}" alt="${item.nickname}" /></div><ul class="child"></ul>`
+            innerHtml: `<div class="avatar"><img src="${this.avatarMirror}/${md5(item.email)}?d=${this.defaultAvatar}" alt="${item.nickname}" /></div><ul class="child"></ul>`
         })
         commentListItem.setAttribute('data-id', item.id)
         commentListItem.setAttribute('data-rootid', item.rootId ? item.rootId : item.id)
@@ -479,9 +480,10 @@ class CotaController {
 function Cota(options = {}) {
     options = {
         el: 'cota',
-        avatarUrl: 'https://dn-qiniu-avatar.qbox.me/avatar',
         pageSize: 10,
         lang: 'en',
+        avatarMirror: 'https://dn-qiniu-avatar.qbox.me/avatar',
+        defaultAvatar: '',
         ...options
     }
     return new CotaBase(options)

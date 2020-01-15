@@ -32,7 +32,7 @@ const Dashboard = () => {
                     <Col xs={24} lg={8}>
                         <Card title='页面'>
                             <Row gutter={16}>
-                                <Col xs={24} lg={6}><Statistic title='总页面数' value={10} prefix={<Icon type='file' />} /></Col>
+                                <Col xs={24} lg={6}><Statistic title='总页面数' value={statisticData.postsCount} prefix={<Icon type='file' />} /></Col>
                                 <Col xs={0} lg={18}>
                                     <List header={<div>最新页面</div>} dataSource={statisticData.posts} renderItem={post => (
                                             <List.Item>
@@ -50,10 +50,10 @@ const Dashboard = () => {
                                 <Col xs={24} lg={6}>
                                     <Row gutter={8}>
                                         <Col xs={12} lg={24}>
-                                            <Statistic title='已审核' value={10} suffix='条' valueStyle={{ color: '#19be6b' }} style={{ marginBottom: '10px' }} />
+                                            <Statistic title='已审核' value={statisticData.passCommentsCount} suffix='条' valueStyle={{ color: '#19be6b' }} style={{ marginBottom: '10px' }} />
                                         </Col>
                                         <Col xs={12} lg={24}>
-                                            <Statistic title='未审核' value={10} suffix='条' valueStyle={{ color: '#ff9900' }} />
+                                            <Statistic title='未审核' value={statisticData.unpassCommentsCount} suffix='条' valueStyle={{ color: '#ff9900' }} />
                                         </Col>
                                     </Row>
                                 </Col>
@@ -75,10 +75,10 @@ const Dashboard = () => {
                                 <Col xs={24} lg={6}>
                                     <Row gutter={8}>
                                         <Col xs={12} lg={24}>
-                                            <Statistic title='可信评论者' value={10} suffix='人' prefix={<Icon type='user' />} style={{ marginBottom: '10px' }} />
+                                            <Statistic title='可信评论者' value={statisticData.usersCount} suffix='人' prefix={<Icon type='user' />} style={{ marginBottom: '10px' }} />
                                         </Col>
                                         <Col xs={12} lg={24}>
-                                            <Statistic title='管理员' value={10} suffix='人' prefix={<Icon type='team' />} />
+                                            <Statistic title='管理员' value={statisticData.adminsCount} suffix='人' prefix={<Icon type='team' />} />
                                         </Col>
                                     </Row>
                                 </Col>

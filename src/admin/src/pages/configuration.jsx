@@ -14,7 +14,7 @@ const Configuration = (props) => {
             props.form.setFieldsValue({
                 'api.whiteList': res.api.whiteList,
                 'api.jwtSecret': res.api.jwtSecret,
-                'admin.trustThreshold': res.admin.trustThreshold
+                'admin.trustThreshold': res.admin.trustThreshold,
             })
         })
     }, [])
