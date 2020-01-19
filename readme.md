@@ -65,8 +65,8 @@ yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进
 |字段|参数类型|作用|默认值|
 |:------:|:------:|:------:|:------:|
 |`el`|string|设置输入框注入节点(id)|cota|
-|`avatarMirror`|string|gravatar头像CDN|七牛CDN|
-|`defaultAvatar`|string|用户没有自定义头像时显示的默认头像|''|
+|`avatarMirror`|string|gravatar头像CDN|gravatar.loli.net|
+|`defaultAvatar`|string|用户没有自定义头像时显示的默认头像|'mm'|
 |`pageSize`|number|每页评论数|10|
 |`lang`|string|显示语言|en|
 
