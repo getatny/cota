@@ -2,6 +2,7 @@ const Router = require('koa-better-router')
 const router = Router().loadMethods()
 const commentController = require('../controller/commnet')
 const postController = require('../controller/post')
+const administratorController = require('../controller/administrator')
 const adminController = require('../controller/admin')
 const userController = require('../controller/user')
 
@@ -13,15 +14,20 @@ router.post('/comment/approve/:commentId', commentController.approveComment)
 // =============================================================================================== posts
 router.get('/posts/:page/:pageSize', postController.getPosts) // get all posts of sepecify page
 
-// =============================================================================================== admins
-router.post('/login', adminController.login)
-router.get('/admin/:id', adminController.getAdmin)
-router.get('/admins/:page/:pageSize', adminController.getAdmins)
+// =============================================================================================== administrators
+router.post('/login', administratorController.login)
+router.get('/administrator/:id', administratorController.getAdmin)
+router.get('/administrators/:page/:pageSize', administratorController.getAdmins)
 
 // =============================================================================================== users
 router.get('/users/:page/:pageSize', userController.getTrustUsers)
 router.post('/user/:email', userController.addTrustUser)
 
-const api = Router({ prefix: '/admin' }).extend(router)
+// =============================================================================================== admin
+router.get('/dashboard/statistic', adminController.getStatisticData)
+router.get('/settings', administratorController.getSettings)
+router.post('/settings', administratorController.setSettings)
+
+const api = Router({ prefix: '/rest/admin' }).extend(router)
 
 module.exports = api

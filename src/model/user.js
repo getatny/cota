@@ -9,7 +9,7 @@ const model = {
     findUserByEmail(email) {
         return user.findOne({ where: { email } })
     },
-    findUsers(page, pageSize) {
+    getUsers(page, pageSize) {
         return user.findAndCountAll({
             limit: pageSize,
             offset: (page - 1) * pageSize,

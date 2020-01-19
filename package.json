@@ -9,11 +9,13 @@
   "dependencies": {
     "@koa/cors": "2",
     "antd": "^3.26.4",
+    "axios": "^0.19.1",
     "bcrypt": "^3.0.7",
     "js-md5": "^0.7.3",
     "koa": "^2.11.0",
     "koa-better-router": "^2.1.1",
     "koa-bodyparser": "^4.2.1",
+    "koa-compress": "^3.0.0",
     "koa-json": "^2.0.2",
     "koa-jwt": "^3.6.0",
     "koa-logger": "^3.2.1",
@@ -21,7 +23,8 @@
     "react-router-transition": "^2.0.0",
     "sequelize": "^5.21.2",
     "sequelize-cli": "^5.5.1",
-    "sqlite3": "^4.1.0"
+    "sqlite3": "^4.1.0",
+    "timeago.js": "^4.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
@@ -29,6 +32,7 @@
     "@babel/preset-env": "^7.7.7",
     "babel-loader": "^8.0.6",
     "css-loader": "^3.4.0",
+    "faker": "^4.1.0",
     "file-loader": "^5.0.2",
     "less": "^3.10.3",
     "less-loader": "^5.0.0",
@@ -43,8 +47,10 @@
     "start": "node src/index.js",
     "export:dev": "webpack --mode=development",
     "export:prod": "webpack --mode=production",
-    "migrate": "sequelize-cli db:migrate && sequelize-cli db:seed:all",
+    "migrate": "sequelize-cli db:migrate && sequelize-cli db:seed --seed 20191227041232-default-administrator.js",
     "i:yarn": "yarn install && cd src/admin && yarn install",
-    "i:npm": "npm install && cd src/admin && npm install"
+    "i:npm": "npm install && cd src/admin && npm install",
+    "build": "cd src/admin && npm run build",
+    "demo:comment": "sequelize-cli db:seed --seed 20200103030217-demo-comments.js"
   }
 }

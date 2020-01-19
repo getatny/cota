@@ -7,7 +7,7 @@ const model = {
         return post.findOne({ where: { key } })
     },
     findPosts(page, pageSize) {
-        return post.findAll({
+        return post.findAndCountAll({
             limit: pageSize,
             offset: (page - 1) * pageSize,
             order: cotaDatabase.Sequelize.literal('createdAt DESC')

@@ -15,6 +15,10 @@ module.exports = {
         return config
     },
 
+    getConfigs() {
+        return JSON.parse(fs.readFileSync(this.configPath))
+    },
+
     setConfig(key, value) {
         try {
             const config = JSON.parse(fs.readFileSync(this.configPath))
@@ -31,6 +35,19 @@ module.exports = {
             fs.writeFileSync(this.configPath, JSON.stringify(config, null, '\t'))
             return true
         } catch(err) {
+            return false
+        }
+    },
+
+    setConfigs(configs) {
+        try {
+            const originConfigs = this.getConfigs()
+            fs.writeFileSync(this.configPath, JSON.stringify({
+                ...originConfigs,
+                ...configs
+            }, null, '  '))
+            return true
+        } catch {
             return false
         }
     }

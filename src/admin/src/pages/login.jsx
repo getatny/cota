@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import { login as loginEvent } from '../store/actions'
 import http from '../utils/http'
 import Config from '../config'
+import Logo from '../imgs/cota-admin-login-logo.png'
 import '../styles/login.less'
 
 const Password = Input.Password
@@ -13,10 +14,8 @@ const Login = (props) => {
     const [ logining, setLogining ] = useState(false)
     const { getFieldDecorator } = props.form
 
-    const env = process.env.NODE_ENV === 'development' ? Config.dev : null
-
     const login = ({ username, password, remember }) => {
-        return http.post(`${env.server}/admin/login`, { username, password, remember })
+        return http.post(`${Config.server}/rest/admin/login`, { username, password, remember })
     }
 
     // handle the event of submit.
@@ -48,7 +47,7 @@ const Login = (props) => {
                 }).catch(e => {
                     console.log(e)
                     setLogining(false)
-                    message.error(e)
+                    message.error('Login failed.')
                 })
             }
         })
@@ -58,7 +57,7 @@ const Login = (props) => {
         <div className="login-page">
             <div className="login-form">
                 <div className="logo">
-                    Cota
+                    <img src={Logo} alt="Cota" />
                 </div>
                 <Form className="login-form-input" onSubmit={handleSubmit}>
                     <Form.Item>

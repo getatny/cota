@@ -9,7 +9,7 @@ const model = {
     findAdminByUsername(username) {
         return admin.findOne({ where: { username } })
     },
-    findAdmins(page, pageSize) {
+    getAdmins(page, pageSize) {
         return admin.findAndCountAll({
             limit: pageSize,
             offset: (page - 1) * pageSize,

@@ -6,7 +6,7 @@ const controller = {
         const { page = 1, pageSize = 20 } = ctx.params
 
         await errorResolver(async () => {
-            const { count, rows: users } = await dbController.findUsers(parseInt(page), parseInt(pageSize))
+            const { count, rows: users } = await dbController.getUsers(parseInt(page), parseInt(pageSize))
 
             ctx.send({
                 data: users,

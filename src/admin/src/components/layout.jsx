@@ -1,34 +1,46 @@
 import React from 'react'
-import { Layout, Menu, Breadcrumb } from 'antd'
+import { Layout, Menu } from 'antd'
+import { withRouter } from 'react-router'
+import { useHistory } from 'react-router-dom'
+import Logo from '../imgs/cota-admin-logo.png'
+import '../styles/layout.less'
 
 const { Header, Content, Footer } = Layout
 
 const menus = [
-    { id: 'dashboard', label: 'Dashboard' }
+    { id: 'dashboard', label: '仪表盘', link: '/' },
+    { id: 'profile', label: '个人', link: '/profile' },
+    { id: 'configuration', label: '设置', link: '/settings' }
 ]
 
 const LayoutComponent = (props) => {
+    const history = useHistory()
+    const selectedMenu = menus.filter(item => props.location.pathname === item.link).map(item => item.id)
+
+    const pushPathToHistory = (key) => {
+        const item = menus.find(item => item.id === key)
+        history.push(item.link)
+    }
+
     return (
         <Layout id='main-layout'>
             <Header>
-                <div className="logo" />
-                <Menu theme='dark' mode='horizontal' style={{ lineHeight: '64px' }} defaultSelectedKeys={menus[0].id}>
+                <div className="logo">
+                    <img src={Logo} alt="Cota" />
+                </div>
+                <Menu theme='dark' mode='horizontal' style={{ lineHeight: '64px' }} selectedKeys={selectedMenu} onClick={({key}) => pushPathToHistory(key)}>
                     {menus.map(menu => (
-                        <Menu.Item key={menu.id}>{menu.label}</Menu.Item>
+                        <Menu.Item key={menu.id} title={menu.label}>{menu.label}</Menu.Item>
                     ))}
                 </Menu>
             </Header>
 
-            <Content style={{ padding: '0 50px' }}>
-                <Breadcrumb style={{ margin: '16px 0' }}>
-                    <Breadcrumb.Item>Cota</Breadcrumb.Item>
-                    <Breadcrumb.Item>current</Breadcrumb.Item>
-                </Breadcrumb>
-                <div style={{ background: '#fff', padding: 24, minHeight: 280 }}>{props.children}</div>
+            <Content style={{ padding: '24px 50px', minHeight: 'calc(100vh - 64px)' }}>
+                {props.children}
                 <Footer style={{ textAlign: 'center' }}>Cota ©2020 Created by Matthew Wang</Footer>
             </Content>
         </Layout>
     )
 }
 
-export default LayoutComponent
+export default withRouter(LayoutComponent)

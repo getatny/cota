@@ -11,6 +11,12 @@ const model = {
             order: cotaDatabase.Sequelize.literal('createdAt DESC')
         })
     },
+    getComments(options) {
+        return comment.findAndCountAll({
+            order: cotaDatabase.Sequelize.literal('createdAt DESC'),
+            ...options
+        })
+    },
     findCommentsByUserEmail(options) {
         return comment.findAndCountAll({
             order: cotaDatabase.Sequelize.literal('createdAt DESC'),
