@@ -2,13 +2,14 @@ const d = window.document
 
 const utils = {
 
-    create: function ({ type, className, id, innerHtml, href, rel }, { event, fn } = {}) {
+    create: function ({ type, className, id, innerHtml, href, rel, title }, { event, fn } = {}) {
         const element = d.createElement(type)
         className && (element.className = className)
         innerHtml && (element.innerHTML = innerHtml)
         id && (element.setAttribute('id', id))
         href && (element.href = href)
         rel && (element.rel = rel)
+        title && (element.title = title)
 
         if (event) {
             element.addEventListener(event, fn)
@@ -17,12 +18,13 @@ const utils = {
         return element
     },
 
-    createATag: function (fn, className = undefined, innerHtml = undefined, id = undefined, ) {
+    createATag: function (fn, className = undefined, innerHtml = undefined, id = undefined, title = undefined) {
         return this.create({
             type: 'a',
             innerHtml,
             className,
-            id
+            id,
+            title
         }, {
             event: 'click',
             fn

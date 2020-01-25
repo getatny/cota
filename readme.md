@@ -69,6 +69,8 @@ yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进
 |`defaultAvatar`|string|用户没有自定义头像时显示的默认头像|'mm'|
 |`pageSize`|number|每页评论数|10|
 |`lang`|string|显示语言|en|
+|`emailNotify`|boolean|是否开启邮件提醒|false|
+|`notifyStatus`|boolean|默认邮件提醒状态（在邮件提醒功能开启状态下，用户可自行选择是否提醒）|false|
 
 ## 管理后台
 

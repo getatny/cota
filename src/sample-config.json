@@ -1,0 +1,22 @@
+{
+  "port": 4444,
+  "api": {
+    "whiteList": "localhost",
+    "jwtSecret": "1233211234567"
+  },
+  "admin": {
+    "trustThreshold": 0
+  },
+  "email": {
+    "website": "cota",
+    "host": "smtp.example.com",
+    "port": 465,
+    "secure": true,
+    "auth": {
+      "user": "no-reply@example.com",
+      "pass": "password"
+    },
+    "subject": "您在 %website% 的评论被回复",
+    "content": ""
+  }
+}

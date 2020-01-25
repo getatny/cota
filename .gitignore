@@ -4,3 +4,4 @@ db/cota.sqlite
 dist/cota.min.js
 dist/cota.min.js.LICENSE
 admin-public
+src/config.json

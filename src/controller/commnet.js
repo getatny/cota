@@ -1,14 +1,29 @@
 const dbController = require('../model')
 const { errorResolver } = require('./resolver')
 const config = require('../utils/conf')
+const mailer = require('../utils/email')
 
 const controller = {
     createComment: async (ctx, next) => {
-        const { key, commentContent, email, nickname, website, parentId, title, url, rootId } = ctx.request.body
+        const { key, commentContent, email, nickname, website, parentId, title, url, rootId, notify, needNotify } = ctx.request.body
 
         await errorResolver(async () => {
-            const [ post ] = await dbController.findOrCreatePost(key, title, url)
-            const comment = await dbController.createComment(post.id, commentContent, email, nickname, website, rootId, parentId)
+            const [ post ] = await dbController.findOrCreatePost(key, title, url) // find or create related post
+            const comment = await dbController.createComment(post.id, commentContent, email, nickname, website, rootId, parentId, notify)
+
+            // send notify email to user if needNotify is true
+            if (needNotify) {
+                const originComment = await dbController.getComment(parentId)
+                if (email !== originComment.email) { // if 2 user have the same email address, then just ignore it.
+                    await mailer.sendEmail(originComment.email, {
+                        nickname: originComment.nickname,
+                        commentedBy: nickname,
+                        comment: commentContent,
+                        originComment: originComment.comment,
+                        url
+                    })
+                }
+            }
 
             ctx.send(comment)
         }, ctx)

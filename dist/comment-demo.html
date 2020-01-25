@@ -9,7 +9,11 @@
     <div id="cota" style="width: 540px; margin: 30px auto;"></div>
     <script src="/cota.min.js"></script>
     <script>
-        new Cota();
+        new Cota({
+            emailNotify: true,
+            notifyStatus: true,
+            lang: 'zh_CN'
+        });
     </script>
 </body>
 </html>

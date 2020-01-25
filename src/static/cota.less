@@ -92,11 +92,10 @@
             background-color: #f9fafb;
             display: flow-root;
 
-            .emoji, .user-info-button {
+            .emoji, .user-info-button, .email-notify {
                 position: relative;
                 float: left!important;
-                padding-top: 11.5px;
-                padding-bottom: 11.5px;
+                padding: 11.5px 7.5px;
                 line-height: 1.1em;
                 height: 16px;
 
@@ -109,8 +108,6 @@
             }
 
             .user-info-button {
-                padding-right: 7.5px;
-                padding-left: 7.5px;
                 margin-left: 7.5px;
                 
                 img {
@@ -118,9 +115,35 @@
                 }
             }
 
-            .emoji {
-                padding-left: 7.5px;
-                padding-right: 7.5px;
+            .email-notify {
+
+                &:after {
+                    content: '';
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    position: absolute;
+                    bottom: 9px;
+                    right: 5.5px;
+                }
+
+                &.open {
+                    &:after {
+                        background-color: #5bb7ed;
+                    }
+                }
+
+                &.close {
+                    &:after {
+                        background-color: #ccc;
+                    }
+                }
+
+                img {
+                    width: 1.4em;
+                    opacity: 1;
+                    top: 0;
+                }
             }
 
             a {
