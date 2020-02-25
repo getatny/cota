@@ -15,6 +15,7 @@ module.exports = {
                 comment: faker.lorem.sentence(),
                 status: 1,
                 postId: 1,
+                notify: 0,
                 createdAt: new Date(),
                 updatedAt: new Date()
             }
@@ -29,6 +30,7 @@ module.exports = {
                 comment: faker.lorem.sentence(),
                 status: 0,
                 postId: 1,
+                notify: 0,
                 createdAt: new Date(),
                 updatedAt: new Date()
             }

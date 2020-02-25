@@ -11,7 +11,12 @@ class I18n {
                 cancelReply: 'Cancel',
                 reply: 'Reply',
                 login: 'Login',
-                logout: 'Logout'
+                logout: 'Logout',
+                emailNotify: {
+                    open: ' is opening now',
+                    close: ' is closing now',
+                    notification: 'Comment notify'
+                }
             },
             input: {
                 email: 'E-Mail',
@@ -35,7 +40,12 @@ class I18n {
                 cancelReply: '取消',
                 reply: '回复',
                 login: '登记',
-                logout: '注销'
+                logout: '注销',
+                emailNotify: {
+                    open: '已开启',
+                    close: '已关闭',
+                    notification: '评论邮件提醒'
+                }
             },
             input: {
                 email: '电子邮箱',

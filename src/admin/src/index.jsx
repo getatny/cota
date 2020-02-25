@@ -10,6 +10,8 @@ import Profile from './pages/profile'
 import Configuration from './pages/configuration'
 import * as serviceWorker from './serviceWorker'
 import './styles/index.less'
+import Comment from "./pages/comment"
+import Trusted from "./pages/trusted"
 
 const PrivateRoute = ({ component: Component, isLogin, ...rest }) => {
     return (
@@ -36,7 +38,7 @@ const HideRoute = ({ component: Component, isLogin, ...rest }) => {
 const App = () => {
     let isLogin = useSelector(state => state.Auth.isLogin)
     const localLoginInfo = JSON.parse(localStorage.getItem('cota_admin_user'))
-    const sessionLoginInfo = JSON.parse(sessionStorage.getItem('cota_user_user'))
+    const sessionLoginInfo = JSON.parse(sessionStorage.getItem('cota_admin_user'))
     const tokenExpire = localStorage.getItem('cota_admin_token_exp') || sessionStorage.getItem('cota_admin_token_exp')
 
     const dispatch = useDispatch()
@@ -53,6 +55,8 @@ const App = () => {
         <HashRouter>
             <Switch>
                 <PrivateRoute exact path='/' component={Dashboard} isLogin={isLogin} />
+                <PrivateRoute exact path='/comments' component={Comment} isLogin={isLogin} />
+                <PrivateRoute exact path='/trusted' component={Trusted} isLogin={isLogin} />
                 <PrivateRoute exact path='/profile' component={Profile} isLogin={isLogin} />
                 <PrivateRoute exact path='/settings' component={Configuration} isLogin={isLogin} />
                 <HideRoute exact path='/login' component={Login} isLogin={isLogin} />

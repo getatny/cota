@@ -17,6 +17,9 @@ const model = {
             ...options
         })
     },
+    getComment(id) {
+        return comment.findByPk(id)
+    },
     findCommentsByUserEmail(options) {
         return comment.findAndCountAll({
             order: cotaDatabase.Sequelize.literal('createdAt DESC'),
@@ -97,8 +100,8 @@ const model = {
             ]
         } })
     },
-    createComment(postId, commentContent, email, nickname, website, rootId, parentId) {
-        return comment.create({ postId, email, nickname, website, parentId, comment: commentContent, rootId })
+    createComment(postId, commentContent, email, nickname, website, rootId, parentId, notify, status = 0) {
+        return comment.create({ postId, email, nickname, website, parentId, comment: commentContent, rootId, notify, status })
     },
     deleteComments(lists) {
         return comment.destroy({ where: {

@@ -6,6 +6,7 @@ const I18n = require('./plugin/i18n')
 const validator = require('./plugin/validator')
 const emoticonImg = require('./imgs/emoticon.png')
 const profileImg = require('./imgs/profile.png')
+const emailImg = require('./imgs/email.png')
 const successImg = require('./imgs/success.png')
 const infoImg = require('./imgs/info.png')
 const failedImg = require('./imgs/failed.png')
@@ -37,6 +38,8 @@ class CotaBase {
             this.defaultAvatar = options.defaultAvatar
             this.lang = options.lang
             this.i18n = new I18n(options.lang)
+            this.emailNotify = options.emailNotify
+            this.notifyStatus = this.emailNotify ? (localStorage.getItem('notifyStatus') || options.notifyStatus) : false
 
             this.emojiList = this.controller.getEmojiFromServer()
 
@@ -100,8 +103,20 @@ class CotaBase {
         this.d.documentElement.addEventListener('click', this.hidePopoverBox) // add a global listener to close popover box
 
         // inject element
+        const buttonList = [submitButton, this.cancelReplyButton]
+
+        if (this.emailNotify) {
+            // email notification button el
+            this.emailButton = dom.createATag(this.emailNotifyTrigger, `email-notify ${this.emailNotify ? 'open' : 'close'}`, `<img src=${emailImg} alt="email" />`, null,
+                `${this.i18n.t('button.emailNotify.notification')}${this.emailNotify ? this.i18n.t('button.emailNotify.open') : this.i18n.t('button.emailNotify.close')}`)
+
+            buttonList.push(this.emailButton)
+        }
+
+        buttonList.push(this.emojiButton, userInfoButton)
+
         dom.append(this.cota, [this.commentBox, this.commentAmount, this.commentListEl, this.emojiSelectBox, this.userInfoBox])
-        dom.prepend(this.commentBox.querySelector('#comment-btns'), [submitButton, this.cancelReplyButton, this.emojiButton, userInfoButton])
+        dom.prepend(this.commentBox.querySelector('#comment-btns'), buttonList)
         // append emoji list to emoji select popover box
         dom.append(emojiSelectBoxContent, this.emojiList, this.createEmojiEl)
 
@@ -116,7 +131,7 @@ class CotaBase {
             this.loginBox = dom.create({
                 type: 'div',
                 className: 'user-info',
-                innerHtml: `<div class="user-avatar"><img src="${this.avatarMirror}/${md5('')}?d=${this.defaultAvatar}" alt="user" /></div><div class="user-login"><form id="login-form"><input name="email" placeholder="${this.i18n.t('input.email')}" /><input name="nickname" placeholder="${this.i18n.t('input.nickname')}" /><input name="website" placeholder="${this.i18n.t('input.website')}" /></form></div>`
+                innerHtml: `<div class="user-avatar"><img src="${this.avatarMirror}/${md5('')}?d=${encodeURIComponent(this.defaultAvatar)}" alt="user" /></div><div class="user-login"><form id="login-form"><input name="email" placeholder="${this.i18n.t('input.email')}" /><input name="nickname" placeholder="${this.i18n.t('input.nickname')}" /><input name="website" placeholder="${this.i18n.t('input.website')}" /></form></div>`
             })
 
             const loginButton = dom.createATag(e => {
@@ -149,7 +164,7 @@ class CotaBase {
         const userInfoDetailBox = dom.create({
             type: 'div',
             className: 'user-info logout',
-            innerHtml: `<div class="user-avatar" title="${this.i18n.t('button.logout')}"><img src="${this.avatarMirror}/${md5(userInfo.email)}?d=${this.defaultAvatar}" alt="${userInfo.nickname}" /></div><div class="info-detail"><div class="email">${userInfo.email}</div><div class="nickname">${userInfo.nickname}</div></div>`
+            innerHtml: `<div class="user-avatar" title="${this.i18n.t('button.logout')}"><img src="${this.avatarMirror}/${md5(userInfo.email)}?d=${encodeURIComponent(this.defaultAvatar)}" alt="${userInfo.nickname}" /></div><div class="info-detail"><div class="email">${userInfo.email}</div><div class="nickname">${userInfo.nickname}</div></div>`
         })
 
         userInfoDetailBox.querySelector('.user-avatar').addEventListener('click', e => {
@@ -247,10 +262,11 @@ class CotaBase {
             type: 'li',
             className: 'comment-list-item',
             id: `comment-list-item-${item.id}`,
-            innerHtml: `<div class="avatar"><img src="${this.avatarMirror}/${md5(item.email)}?d=${this.defaultAvatar}" alt="${item.nickname}" /></div><ul class="child"></ul>`
+            innerHtml: `<div class="avatar"><img src="${this.avatarMirror}/${md5(item.email)}?d=${encodeURIComponent(this.defaultAvatar)}" alt="${item.nickname}" /></div><ul class="child"></ul>`
         })
         commentListItem.setAttribute('data-id', item.id)
         commentListItem.setAttribute('data-rootid', item.rootId ? item.rootId : item.id)
+        commentListItem.setAttribute('data-notify', item.notify)
 
         // comment detail el
         const commentDetail = dom.create({
@@ -303,7 +319,9 @@ class CotaBase {
                     title: this.d.title,
                     url: this.d.location.href,
                     parentId: this.commentTo ? parseInt(this.commentTo.dataset.id) : 0,
-                    rootId: this.commentTo ? parseInt(this.commentTo.dataset.rootid) : 0
+                    rootId: this.commentTo ? parseInt(this.commentTo.dataset.rootid) : 0,
+                    notify: this.emailNotify ? this.notifyStatus ? 1 : 0 : 0,
+                    needNotify: this.commentTo ? this.commentTo.dataset.notify : 0
                 }).then(res => res.json()).then(res => {
                     if (res.success) {
                         this.notify(this.i18n.t('commentSubmitSuccess'), 'success')
@@ -317,6 +335,7 @@ class CotaBase {
                             website: res.response.website,
                             nickname: res.response.nickname,
                             comment: res.response.comment,
+                            status: res.response.status,
                             createdAt: format(new Date().getTime())
                         })
 
@@ -344,6 +363,15 @@ class CotaBase {
             this.notify(msg, 'failed')
             if (!this.userInfo.email) this.commentBox.querySelector('.user-info-button').click()
         })
+    }
+
+    emailNotifyTrigger = () => {
+        if (this.emailNotify) {
+            this.notifyStatus = !this.notifyStatus
+            localStorage.setItem('notifyStatus', this.notifyStatus)
+            this.emailButton.className = `email-notify ${this.notifyStatus ? 'open' : 'close'}`
+            this.emailButton.title = `${this.i18n.t('button.emailNotify.notification')}${this.notifyStatus ? this.i18n.t('button.emailNotify.open') : this.i18n.t('button.emailNotify.close')}`
+        }
     }
 
     showPopoverBox = (e) => {
@@ -482,8 +510,10 @@ function Cota(options = {}) {
         el: 'cota',
         pageSize: 10,
         lang: 'en',
-        avatarMirror: 'https://dn-qiniu-avatar.qbox.me/avatar',
-        defaultAvatar: '',
+        avatarMirror: 'https://gravatar.loli.net/avatar',
+        defaultAvatar: 'mm',
+        emailNotify: false,
+        notifyStatus: false,
         ...options
     }
     return new CotaBase(options)
