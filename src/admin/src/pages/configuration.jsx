@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import LayoutComponent from '../components/layout'
-import {PageHeader, Tabs, Form, Input, Button, Icon, message, Col, Row} from "antd"
+import { PageHeader, Tabs, Form, Input, Button, Icon, message, Col, Row } from "antd"
 import http from "../utils/http"
 import Config from "../config"
 
@@ -30,12 +30,8 @@ const Configuration = (props) => {
     const saveSettings = () => {
         props.form.validateFieldsAndScroll((err, values) => {
             if (!err) {
-                http.post(`${Config.server}/rest/admin/settings`, { configs: values }).then(({ success }) => {
-                    if (success) {
-                        message.success('Settings saved')
-                    } else {
-                        message.success('Save settings failed')
-                    }
+                http.post(`${Config.server}/rest/admin/settings`, { configs: values }).then(() => {
+                    message.success('Settings saved')
                 }).catch(() => message.success('Save settings failed'))
             }
         })

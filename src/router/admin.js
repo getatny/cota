@@ -7,8 +7,8 @@ const adminController = require('../controller/admin')
 const userController = require('../controller/user')
 
 // =============================================================================================== comments
-router.del('/comments/delete', commentController.deleteComments) // delete comments
-router.get('/comments/:key/:page/:pageSize', commentController.getComments) // get all the comments of current page
+router.post('/comments/delete', commentController.deleteComments) // delete comments
+router.get('/comments/:key/:page/:pageSize/:status', commentController.getComments) // get all the comments of current page
 router.post('/comment/approve/:commentId', commentController.approveComment)
 
 // =============================================================================================== posts

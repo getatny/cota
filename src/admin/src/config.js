@@ -1,11 +1,11 @@
 const config = {
     dev: {
         server: 'http://localhost:4444',
-        gravatarMirror: 'https://dn-qiniu-avatar.qbox.me/avatar'
+        gravatarMirror: 'https://gravatar.loli.net/avatar'
     },
     prod: {
         server: '',
-        gravatarMirror: 'https://dn-qiniu-avatar.qbox.me/avatar'
+        gravatarMirror: 'https://gravatar.loli.net/avatar'
     }
 }
 

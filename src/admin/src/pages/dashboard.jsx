@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react'
+import React, { useEffect, useState } from 'react'
 import LayoutComponent from '../components/layout'
 import { PageHeader, Row, Col, Card, Statistic, Icon, List, Typography, Avatar } from "antd"
 import http from '../utils/http'

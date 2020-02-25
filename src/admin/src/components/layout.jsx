@@ -9,6 +9,10 @@ const { Header, Content, Footer } = Layout
 
 const menus = [
     { id: 'dashboard', label: '仪表盘', link: '/' },
+    { id: 'pages', label: '页面', link: '/pages' },
+    { id: 'comments', label: '评论', link: '/comments' },
+    { id: 'trusted', label: '可信用户', link: '/trusted' },
+    { id: 'admins', label: '管理员', link: '/admins' },
     { id: 'profile', label: '个人', link: '/profile' },
     { id: 'configuration', label: '设置', link: '/settings' }
 ]

@@ -100,8 +100,8 @@ const model = {
             ]
         } })
     },
-    createComment(postId, commentContent, email, nickname, website, rootId, parentId, notify) {
-        return comment.create({ postId, email, nickname, website, parentId, comment: commentContent, rootId, notify })
+    createComment(postId, commentContent, email, nickname, website, rootId, parentId, notify, status = 0) {
+        return comment.create({ postId, email, nickname, website, parentId, comment: commentContent, rootId, notify, status })
     },
     deleteComments(lists) {
         return comment.destroy({ where: {

@@ -335,6 +335,7 @@ class CotaBase {
                             website: res.response.website,
                             nickname: res.response.nickname,
                             comment: res.response.comment,
+                            status: res.response.status,
                             createdAt: format(new Date().getTime())
                         })
 
