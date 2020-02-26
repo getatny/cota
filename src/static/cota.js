@@ -52,6 +52,9 @@ class CotaBase {
     }
 
     reset = (options) => {
+        this.cota = this.d.getElementById(options.el || 'cota')
+        this.cota.classList.add('cota-wrapper')
+
         this.key = md5(options.key)
         this.postTitle = options.title
         this.postUrl = options.url
