@@ -44,6 +44,8 @@ class CotaBase {
             this.postTitle = options.title
             this.postUrl = options.url
 
+            this.event = options.event
+
             this.emojiList = this.controller.getEmojiFromServer()
 
             this.importCSS('https://fonts.font.im/css?family=Open+Sans') // load google font
@@ -135,6 +137,8 @@ class CotaBase {
 
         this.userInfo.email ? this.renderUserInfoDetailBox() : this.renderUserLoginBox()
         this.renderCommentList()
+
+        this.event.onReady ? this.event.onReady() : null
     }
 
     renderUserLoginBox = () => {
@@ -531,6 +535,7 @@ function Cota(options = {}) {
         key: document.location.pathname,
         title: document.title,
         url: document.location.href,
+        event: {},
         ...options
     }
     return new CotaBase(options)
