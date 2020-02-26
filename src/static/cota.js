@@ -203,7 +203,7 @@ class CotaBase {
     }
 
     renderCommentList = () => {
-        this.controller.getCommentFromServer(this.d.location.pathname, this.commentPage, this.commentPageSize, this.userInfo).then(res => {
+        this.controller.getCommentFromServer(this.key, this.commentPage, this.commentPageSize, this.userInfo).then(res => {
             this.commentAmount.querySelector('span').innerText = res.count
             this.renderCommentListItem(res.comments, res.count)
         })
@@ -440,7 +440,7 @@ class CotaBase {
     }
 
     loadMoreComments = () => {
-        this.controller.getCommentFromServer(this.d.location.pathname, (this.commentPage + 1), this.commentPageSize, this.userInfo).then(res => {
+        this.controller.getCommentFromServer(this.key, (this.commentPage + 1), this.commentPageSize, this.userInfo).then(res => {
             this.commentPage++
             this.renderCommentListItem(res.comments, res.count)
         })
@@ -506,8 +506,8 @@ class CotaController {
         return http.post(`${this.serverPath}/rest/public/comment/create`, data)
     }
 
-    getCommentFromServer = (path, page, pageSize, userInfo) => {
-        return http.get(`${this.serverPath}/rest/public/comments/${md5(path)}/${page}/${pageSize}${userInfo.email ? '?email=' + userInfo.email : ''}`).then(res => res.json()).then(res => {
+    getCommentFromServer = (key, page, pageSize, userInfo) => {
+        return http.get(`${this.serverPath}/rest/public/comments/${key}/${page}/${pageSize}${userInfo.email ? '?email=' + userInfo.email : ''}`).then(res => res.json()).then(res => {
             if (res.success) {
                 return {
                     comments: res.response.comments,
