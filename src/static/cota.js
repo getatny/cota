@@ -356,16 +356,21 @@ class CotaBase {
                             createdAt: format(new Date().getTime())
                         })
 
+                        // detect if reply someone's comment
                         if (this.commentTo === null) {
                             this.commentListEl.prepend(commentListItem)
                         } else {
                             this.commentTo.children[2].append(commentListItem)
                         }
 
+                        // reset commentBox place
                         if (e.target.previousElementSibling.style.display === 'block') {
                             e.target.previousElementSibling.click()
                         }
                         e.target.parentElement.previousElementSibling.value = ''
+
+                        // afterComment event
+                        this.event.afterComment ? this.event.afterComment() : null
                     } else {
                         this.notify(this.i18n.t('commentSubmitFailed'), 'failed')
                     }
