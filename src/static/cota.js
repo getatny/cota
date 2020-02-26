@@ -40,6 +40,9 @@ class CotaBase {
             this.i18n = new I18n(options.lang)
             this.emailNotify = options.emailNotify
             this.notifyStatus = this.emailNotify ? (localStorage.getItem('notifyStatus') || options.notifyStatus) : false
+            this.key = md5(options.key)
+            this.postTitle = options.title
+            this.postUrl = options.url
 
             this.emojiList = this.controller.getEmojiFromServer()
 
@@ -312,12 +315,12 @@ class CotaBase {
 
             return validator.validate({ comment: value }, { comment: 'required' }, this.i18n).then(() => {
                 this.controller.submitComment({
-                    key: md5(this.d.location.pathname),
+                    key: this.key,
                     commentContent: value,
                     email: this.userInfo.email,
                     nickname: this.userInfo.nickname,
-                    title: this.d.title,
-                    url: this.d.location.href,
+                    title: this.postTitle,
+                    url: this.postUrl,
                     parentId: this.commentTo ? parseInt(this.commentTo.dataset.id) : 0,
                     rootId: this.commentTo ? parseInt(this.commentTo.dataset.rootid) : 0,
                     notify: this.emailNotify ? this.notifyStatus ? 1 : 0 : 0,
@@ -355,9 +358,10 @@ class CotaBase {
                 }).catch(() => this.notify(this.i18n.t('commentSubmitFailed'), 'failed'))
             })
         }).catch(errors => {
+            e.stopPropagation()
             let msg = ''
             errors.forEach((item, index) => {
-                errors.length > 1 ? (msg += `${index + 1}.${item}\n`) : null
+                errors.length > 1 ? (msg += `${index + 1}.${item}\r\n`) : null
                 errors.length === 1 ? (msg += `${item}`) : null
             })
             this.notify(msg, 'failed')
@@ -514,6 +518,9 @@ function Cota(options = {}) {
         defaultAvatar: 'mm',
         emailNotify: false,
         notifyStatus: false,
+        key: document.location.pathname,
+        title: document.title,
+        url: document.location.href,
         ...options
     }
     return new CotaBase(options)

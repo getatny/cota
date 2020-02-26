@@ -24,7 +24,7 @@ Cota 是一个使用Javascript语言编写的，以 sqlite 作为数据存储的
 cd cota # 进入本项目根目录
 yarn i:yarn # 安装server及admin所需依赖，npm需要使用npm run i:npm
 yarn export:prod # 导出静态资源，测试环境下可使用yarn export:dev，将会有完整的error信息显示
-yarn build #生成管理后台页面
+yarn build # 生成管理后台页面
 yarn migrate # 创建数据库，添加默认admin账号 cota-admin / cota-admin (请记得在项目部署后修改密码)
 yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进行反向代理提供公网访问
 ```
@@ -82,6 +82,9 @@ yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进
 |`lang`|string|显示语言|en|
 |`emailNotify`|boolean|是否开启邮件提醒|false|
 |`notifyStatus`|boolean|默认邮件提醒状态（在邮件提醒功能开启状态下，用户可自行选择是否提醒）|false|
+|`key`|string|本页面对应key|md5(document.location.pathname)|
+|`url`|string|本页面url|document.location.href|
+|`title`|string|本页面标题|document.title|
 
 ## 管理后台
 
