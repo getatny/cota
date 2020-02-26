@@ -9,22 +9,29 @@ Cota 是一个使用Javascript语言编写的，以 sqlite 作为数据存储的
 
 ## 快速开始
 
-首先，你需要通过一下命令克隆本项目，并安装 server 程序启动所需要的所有依赖、建立 sqlite 数据库及默认 admin 账号：
+要想让cota服务在你自己的server上运行，至少需要以下几步操作：
+
+1. 克隆本项目到本地
+2. 安装项目所需要的依赖
+3. 生成静态资源
+4. 生成后台管理页面
+5. 创建数据库
+6. 启动
 
 > ps. 我使用 yarn 管理依赖包，如果你没有安装 yarn，请使用 npm 替换下列命令中所有的 yarn 关键字！
 
 ```bash
-git clone git@github.com:getatny/cota.git
-cd cota
+cd cota # 进入本项目根目录
 yarn i:yarn # 安装server及admin所需依赖，npm需要使用npm run i:npm
 yarn export:prod # 导出静态资源，测试环境下可使用yarn export:dev，将会有完整的error信息显示
-yarn migrate # 创建数据库，添加默认admin账号 cota-admin / cota-admin (请记得修改密码)
+yarn build # 生成管理后台页面
+yarn migrate # 创建数据库，添加默认admin账号 cota-admin / cota-admin (请记得在项目部署后修改密码)
 yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进行反向代理提供公网访问
 ```
 
 这样 `Cota` server及静态资源就准备好了，后面还需要做最后一步操作，将评论框注入你需要评论服务的页面。
 
-要实现评论框注入，你需要准备一个容纳评论框的节点，并且该节点拥有唯一的id。（例如：`<div id="cota"></div>`）
+要实现评论框注入，你需要准备一个容纳评论框的DOM节点，并且该节点拥有唯一的id。（例如：`<div id="cota"></div>`）
 
 之后引入 `cota.min.js` 并实例化 `Cota` 对象，传入你准备好的容纳评论框的id即可：
 
@@ -39,6 +46,8 @@ yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进
 </script>
 ```
 
+> ps. 在创建 `Cota` 实例的时候，其实所有的参数都是可选，如果你的节点id就是cota的话，只需要 `new Cota()` 即可，但配置的存在让你多了一些选择，具体的配置项请参考下面配置一节。
+
 刷新页面，即可看到 cota 注入成功！
 
 ## 配置
@@ -51,6 +60,8 @@ yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进
 2. 在实例化 `Cota` 对象时传入的options
 
 ### src/config.json
+
+默认克隆下来的项目是没有这个文件的，因为里面的配置都是极其隐私的部分。所以我只给出了一个 `sample-config.json` 文件，你需要将这份sample文件复制为 `config.json` 在对其进行更改即可。
 
 打开 `src/config.json` 文件你可以看到几个配置项，其中 `whiteList` 指定了能够通过 cota 暴露的 api 访问评论资源的域名，一般来说需要设置两个，一个是 cota server 启动的域名，另一个是被注入 cota 评论系统的网页域名。
 
@@ -71,6 +82,9 @@ yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进
 |`lang`|string|显示语言|en|
 |`emailNotify`|boolean|是否开启邮件提醒|false|
 |`notifyStatus`|boolean|默认邮件提醒状态（在邮件提醒功能开启状态下，用户可自行选择是否提醒）|false|
+|`key`|string|本页面对应key|md5(document.location.pathname)|
+|`url`|string|本页面url|document.location.href|
+|`title`|string|本页面标题|document.title|
 
 ## 管理后台
 

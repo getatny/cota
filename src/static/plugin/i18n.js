@@ -19,8 +19,8 @@ class I18n {
                 }
             },
             input: {
-                email: 'E-Mail',
-                nickname: 'Nickname',
+                email: 'E-Mail(required)',
+                nickname: 'Nickname(required)',
                 website: 'Website: http://'
             },
             validator: {
@@ -48,17 +48,19 @@ class I18n {
                 }
             },
             input: {
-                email: '电子邮箱',
-                nickname: '昵称',
+                email: '电子邮箱(必填)',
+                nickname: '昵称(必填)',
                 website: '网址: http://'
             },
             validator: {
-                required: 'can not be empty',
-                email: 'Email is invalid',
-                website: 'Website is invalid'
+                required: '不能为空',
+                email: '邮箱格式不匹配',
+                website: '网址格式不匹配'
             },
             notTrusted: '待审核',
-            commentAmount: '条评论'
+            commentAmount: '条评论',
+            commentSubmitFailed: '评论失败!',
+            commentSubmitSuccess: '评论成功!'
         }
     }
 
