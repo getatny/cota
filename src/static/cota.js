@@ -51,6 +51,13 @@ class CotaBase {
         }
     }
 
+    reset = (options) => {
+        this.key = md5(options.key)
+        this.postTitle = options.title
+        this.postUrl = options.url
+        this.generateComment()
+    }
+
     generateComment = () => {
         // comment-box el
         this.commentBox = dom.create({
