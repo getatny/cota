@@ -195,7 +195,8 @@
             a {
                 cursor: pointer;
                 width: 22px;
-                margin-right: 2px;
+                margin-right: 5px;
+                user-select: none;
 
                 &:nth-child(8n) {
                     margin-right: 0;
@@ -308,6 +309,7 @@
 
                 .info-detail {
                     margin-left: 20px;
+                    text-align: right;
 
                     .email {
                         color: #808695;
@@ -335,6 +337,12 @@
             border-left-color: #fff;
             left: 40px;
             transform: rotate(45deg)
+        }
+    }
+
+    #emoji-select-box {
+        .box-content {
+            max-width: 203px;
         }
     }
 

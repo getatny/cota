@@ -369,6 +369,9 @@ class CotaBase {
                         }
                         e.target.parentElement.previousElementSibling.value = ''
 
+                        // comment amount plus one
+                        this.commentAmount.querySelector('span').innerText++
+
                         // afterComment event
                         this.event.afterComment ? this.event.afterComment() : null
                     } else {
@@ -518,7 +521,7 @@ class CotaController {
     }
 
     getEmojiFromServer = () => {
-        return ['😀', '😃', '😄']
+        return ['😀', '😄', '😂', '🌝', '🙂', '🙁', '😘️', '😢', '😏', '😭', '👌', '💪', '👍', '🙏', '🙊', '🙈']
     }
 
     getServerPathByJSLink = () => {
