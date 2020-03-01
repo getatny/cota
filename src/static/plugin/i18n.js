@@ -21,7 +21,8 @@ class I18n {
             input: {
                 email: 'E-Mail(required)',
                 nickname: 'Nickname(required)',
-                website: 'Website: http://'
+                website: 'Website: http://',
+                comment: 'Comment'
             },
             validator: {
                 required: 'can not be empty',
@@ -50,7 +51,8 @@ class I18n {
             input: {
                 email: '电子邮箱(必填)',
                 nickname: '昵称(必填)',
-                website: '网址: http://'
+                website: '网址: http://',
+                comment: '评论内容'
             },
             validator: {
                 required: '不能为空',

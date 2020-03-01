@@ -57,9 +57,10 @@ const controller = {
                         count
                     })
                 } else {
-                    const { count, rows: mainComments } = await dbController.getMainComments(post.id, parseInt(page), parseInt(pageSize), email)
+                    const mainComments = await dbController.getMainComments(post.id, parseInt(page), parseInt(pageSize), email)
                     const mainCommentsIds = mainComments.map(comment => comment.id)
                     const childComments = await dbController.getChildComments(post.id, mainCommentsIds, email)
+                    const count = await dbController.countComments({ postId: post.id, status: 1 })
 
                     ctx.send({
                         comments: {

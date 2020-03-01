@@ -27,7 +27,7 @@ const model = {
         })
     },
     getMainComments(postId, page, pageSize, email = null) {
-        return comment.findAndCountAll({
+        return comment.findAll({
             where: email ? {
                 [Op.or]: [
                     {

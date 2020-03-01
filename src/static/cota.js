@@ -424,10 +424,12 @@ class CotaBase {
     }
 
     hidePopoverBox = (e) => {
-        if (this.emojiSelectBoxStatus && e.target.closest('#emoji-select-box') === null && e.target.className !== 'emoji' && e.target.alt !== 'emoticon') {
+        if (this.emojiSelectBoxStatus && e.target.closest('#emoji-select-box') === null && e.target.className !== 'emoji' && e.target.alt !== 'emoticon'
+            && this.emojiSelectBoxStatus.classList.contains('show-box')) {
             this.emojiSelectBox.className = 'hide-box'
         } 
-        if (this.userInfoBoxStatus && e.target.closest('#user-info-box') === null && e.target.className !== 'user-info-button' && e.target.alt !== 'profile') {
+        if (this.userInfoBoxStatus && e.target.closest('#user-info-box') === null && e.target.className !== 'user-info-button' && e.target.alt !== 'profile'
+            && this.userInfoBox.classList.contains('show-box')) {
             this.userInfoBox.className = 'hide-box'
         }
     }
