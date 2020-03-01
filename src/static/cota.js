@@ -24,12 +24,29 @@ class CotaBase {
         this.notificationTimer = null
 
         this.userInfo = JSON.parse(window.localStorage.getItem('cota_user')) || { email: undefined, nickname: undefined, website: undefined }
-        this.init(options)
+        this.cota = this.d.getElementById(options.el)
+
+        this.i18n = new I18n(options.lang)
+
+        if (options.lazyLoad) {
+            const detectIfCommentBoxDisplay = this.debounce(() => {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop
+                const viewportSize = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+
+                if (scrollTop + viewportSize - this.cota.offsetTop > 0) {
+                    this.cota.innerHTML = `<div class="comment-loading">${this.i18n.t('commentLoading')}</div>`
+                    this.d.removeEventListener('scroll', detectIfCommentBoxDisplay)
+                    this.init(options, true)
+                }
+            }, 1000)
+            this.d.addEventListener('scroll', detectIfCommentBoxDisplay)
+            detectIfCommentBoxDisplay()
+        } else {
+            this.init(options)
+        }
     }
 
-    init = (options) => {
-        this.cota = this.d.getElementById(options.el)
-        
+    init = (options, lazyLoad) => {
         if (this.cota) {
             this.cota.classList.add('cota-wrapper')
             this.controller = new CotaController()
@@ -37,7 +54,6 @@ class CotaBase {
             this.avatarMirror = options.avatarMirror
             this.defaultAvatar = options.defaultAvatar
             this.lang = options.lang
-            this.i18n = new I18n(options.lang)
             this.emailNotify = options.emailNotify
             this.notifyStatus = this.emailNotify ? (localStorage.getItem('notifyStatus') || options.notifyStatus) : false
             this.key = md5(options.key)
@@ -49,7 +65,19 @@ class CotaBase {
             this.emojiList = this.controller.getEmojiFromServer()
 
             this.importCSS('https://fonts.font.im/css?family=Open+Sans') // load google font
-            this.generateComment()
+            this.generateComment(lazyLoad)
+        }
+    }
+
+    debounce = (fn, wait) => {
+        let timeout
+        return function() {
+            let context = this, args = arguments
+            clearTimeout(timeout)
+            timeout = setTimeout(() => {
+                timeout = null
+                fn.apply(context, args)
+            }, wait)
         }
     }
 
@@ -63,7 +91,7 @@ class CotaBase {
         this.generateComment()
     }
 
-    generateComment = () => {
+    generateComment = (lazyLoad) => {
         // comment-box el
         this.commentBox = dom.create({
             type: 'div',
@@ -129,6 +157,10 @@ class CotaBase {
         }
 
         buttonList.push(this.emojiButton, userInfoButton)
+
+        if (lazyLoad) {
+            this.cota.innerHTML = ''
+        }
 
         dom.append(this.cota, [this.commentBox, this.commentAmount, this.commentListEl, this.emojiSelectBox, this.userInfoBox])
         dom.prepend(this.commentBox.querySelector('#comment-btns'), buttonList)
@@ -546,6 +578,7 @@ function Cota(options = {}) {
         title: document.title,
         url: document.location.href,
         event: {},
+        lazyLoad: false,
         ...options
     }
     return new CotaBase(options)

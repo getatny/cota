@@ -32,7 +32,8 @@ class I18n {
             notTrusted: 'Reviewing',
             commentAmount: 'Comments',
             commentSubmitFailed: 'Submit comment failed!',
-            commentSubmitSuccess: 'Submit comment successfully!'
+            commentSubmitSuccess: 'Submit comment successfully!',
+            commentLoading: 'Comments is loading...'
         },
 
         'zh_CN': {
@@ -62,7 +63,8 @@ class I18n {
             notTrusted: '待审核',
             commentAmount: '条评论',
             commentSubmitFailed: '评论失败!',
-            commentSubmitSuccess: '评论成功!'
+            commentSubmitSuccess: '评论成功!',
+            commentLoading: '评论加载中...'
         }
     }
 

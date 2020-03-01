@@ -85,6 +85,7 @@ yarn start # 默认该server会启动到localhost:4444，你可以通过nginx进
 |`key`|string|本页面对应key|md5(document.location.pathname)|
 |`url`|string|本页面url|document.location.href|
 |`title`|string|本页面标题|document.title|
+|`lazyload`|boolean|是否懒加载评论框|false|
 
 ## 管理后台
 
